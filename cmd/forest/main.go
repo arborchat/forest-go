@@ -3,11 +3,13 @@ package main
 import (
 	"encoding"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"regexp"
 
 	forest "git.sr.ht/~whereswaldon/forest-go"
 	"git.sr.ht/~whereswaldon/forest-go/fields"
@@ -121,6 +123,10 @@ func createIdentity(args []string) error {
 	if err := flags.Parse(args); err != nil {
 		usage()
 		return err
+	}
+	newline = regexp.MustCompile(`(\n)`)
+	if newline.MatchString(name) {
+		return errors.new("Newline in username")
 	}
 	signer, err := getSigner(gpguser, keyfile)
 	if err != nil {
