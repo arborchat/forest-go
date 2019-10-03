@@ -9,7 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"regexp"
+	"strings"
 
 	forest "git.sr.ht/~whereswaldon/forest-go"
 	"git.sr.ht/~whereswaldon/forest-go/fields"
