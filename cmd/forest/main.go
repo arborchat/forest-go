@@ -124,7 +124,6 @@ func createIdentity(args []string) error {
 		usage()
 		return err
 	}
-	newline = regexp.MustCompile(`(\n)`)
 	if newline.MatchString(name) {
 		return errors.new("Newline in username")
 	}
