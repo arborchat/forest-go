@@ -124,7 +124,7 @@ func createIdentity(args []string) error {
 		usage()
 		return err
 	}
-	if newline.MatchString(name) {
+	if strings.Contains(name, "\n") {
 		return errors.new("Newline in username")
 	}
 	signer, err := getSigner(gpguser, keyfile)
