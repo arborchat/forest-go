@@ -3,7 +3,6 @@ package main
 import (
 	"encoding"
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
 	"io"
