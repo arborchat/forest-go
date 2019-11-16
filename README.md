@@ -6,7 +6,6 @@
 This repo contains:
 
 - A golang library for working with nodes in the Arbor Forest. This repo is based on the work-in-progress specification [available here](https://github.com/arborchat/protocol/blob/forest/spec/Forest.md).
-- An interactive Arbor client capable of rendering a directory of nodes and creating new ones in `cmd/viewer`. Combined with a file synchronization tool like [`syncthing`](https://syncthing.net/), this client can be used as a standalone chat system.
 - A CLI for creating, manipulating, and viewing nodes in the Arbor Forest in `cmd/forest`
 
 For information about each component of this repo, see later in this file.
@@ -20,53 +19,6 @@ Arbor is a chat system that makes communication clearer. It explicitly captures 
 You can get information about the Arbor project [here](https://man.sr.ht/~whereswaldon/arborchat/).
 
 For news about the project, join our [mailing list](https://lists.sr.ht/~whereswaldon/arbor-dev)!
-
-## Interactive Arbor Client
-
-The `viewer` client displays any valid Arbor nodes within its history as an interactive conversation. It is
-capable of creating new nodes within the conversation using information provided by the user at startup.
-
-### Installing the viewer
-
-The CLI is in `./cmd/viewer/`, and you can install it with:
-
-```sh
-go get -u git.sr.ht/~whereswaldon/forest-go/cmd/viewer
-```
-
-### Using the viewer
-
-Navigate to a directory containing (at minimum) an existing Arbor Identity, Community, and Reply. (You can create these with the `forest` CLI described below)
-
-Then run `viewer`. Answer the interactive prompts to configure `viewer` with the ability to create new
-messages.
-
-Once the full-screen terminal client starts up properly, you can use the following keybindings:
-
-- `Control+c`: quit
-- `j`: move cursor down
-- `k`: move cursor up
-- `h`: move cursor left
-- `l`: move cursor right
-- `g`: jump to top
-- `G`: jump to bottom
-- `Enter`: reply to message under cursor
-
-When you're composing a new message, `viewer` will launch an editor of your choice. Save and quit that
-editor to send your message. Any lines starting with `#` will be removed from the message text before
-it is sent. If your message is empty, no message will be sent.
-
-## Command Line Interface
-
-The `forest` CLI can create and display nodes in the Arbor Forest.
-
-### Installing the CLI
-
-The CLI is in `./cmd/forest/`, and you can install it with:
-
-```sh
-go get -u git.sr.ht/~whereswaldon/forest-go/cmd/forest
-```
 
 ### Using the CLI
 
