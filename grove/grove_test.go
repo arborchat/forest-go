@@ -85,6 +85,7 @@ func (f *fakeFile) ResetBuffer() {
 // needed to implement truncatableFile
 func (f *fakeFile) Truncate(size int64) error {
 	f.Buffer.Truncate(int(size))
+	f.modtime = time.Now()
 	return nil
 }
 
@@ -484,6 +485,27 @@ func TestGroveAddFailToWrite(t *testing.T) {
 
 	if err := g.Add(reply); err == nil {
 		t.Errorf("Expected Add() to fail when writing to file fails")
+	}
+}
+
+func TestGroveAddShouldntTruncateExisting(t *testing.T) {
+	fs := newFakeFS()
+	fakeNodeBuilder := NewNodeBuilder(t)
+	reply, replyFile := fakeNodeBuilder.newReplyFile("test content")
+	fs.files[replyFile.Name()] = replyFile
+	originalModTime := replyFile.ModTime()
+
+	g, err := grove.NewWithFS(fs)
+	if err != nil {
+		t.Errorf("Failed constructing grove: %v", err)
+	}
+
+	if err := g.Add(reply); err != nil {
+		t.Errorf("Failed adding node to grove which already contains it: %v", err)
+	}
+
+	if !replyFile.ModTime().Equal(originalModTime) {
+		t.Errorf("Reply file should not have been modified by Add() operation, but modtime is different")
 	}
 }
 
