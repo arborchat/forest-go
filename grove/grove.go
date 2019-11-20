@@ -259,18 +259,21 @@ func (g *Grove) Recent(nodeType fields.NodeType, quantity int) ([]forest.Node, e
 	return rightType, nil
 }
 
-// Add inserts the node into the grove.
-//
-// BUG(whereswaldon): If the node is already present, this will overwrite it.
-// This is rather wasteful. It would be better to detect the existing file and
-// do nothing instead.
+// Add inserts the node into the grove. If the given node is already in the
+// grove, Add will do nothing. It is not an error to insert a node more than
+// once.
 func (g *Grove) Add(node forest.Node) error {
+	if _, alreadyPresent, err := g.Get(node.ID()); err != nil {
+		return fmt.Errorf("failed checking whether node already in grove: %w", err)
+	} else if alreadyPresent {
+		return nil
+	}
 	data, err := node.MarshalBinary()
 	if err != nil {
 		return fmt.Errorf("failed to serialize node: %w", err)
 	}
 
-	id, _ := node.ID().MarshalString()
+	id := node.ID().String()
 	nodeFile, err := g.Create(id)
 	if err != nil {
 		return fmt.Errorf("failed to create file for node %s: %w", id, err)
