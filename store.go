@@ -45,11 +45,7 @@ func (m *MemoryStore) CopyInto(other Store) error {
 }
 
 func (m *MemoryStore) Get(id *fields.QualifiedHash) (Node, bool, error) {
-	idString, err := id.MarshalString()
-	if err != nil {
-		return nil, false, err
-	}
-	return m.GetID(idString)
+	return m.GetID(id.String())
 }
 
 func (m *MemoryStore) GetIdentity(id *fields.QualifiedHash) (Node, bool, error) {
@@ -74,10 +70,7 @@ func (m *MemoryStore) GetID(id string) (Node, bool, error) {
 }
 
 func (m *MemoryStore) Children(id *fields.QualifiedHash) ([]*fields.QualifiedHash, error) {
-	idString, err := id.MarshalString()
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal node id into key: %w", err)
-	}
+	idString := id.String()
 	children, any := m.ChildMap[idString]
 	if !any {
 		return []*fields.QualifiedHash{}, nil
@@ -93,10 +86,7 @@ func (m *MemoryStore) Children(id *fields.QualifiedHash) ([]*fields.QualifiedHas
 }
 
 func (m *MemoryStore) Add(node Node) error {
-	id, err := node.ID().MarshalString()
-	if err != nil {
-		return err
-	}
+	id := node.ID().String()
 	return m.AddID(id, node)
 }
 
@@ -106,10 +96,7 @@ func (m *MemoryStore) AddID(id string, node Node) error {
 		return nil
 	}
 	m.Items[id] = node
-	parentID, err := node.ParentID().MarshalString()
-	if err != nil {
-		return fmt.Errorf("failed to marshal string of parent node: %w", err)
-	}
+	parentID := node.ParentID().String()
 	m.ChildMap[parentID] = append(m.ChildMap[parentID], id)
 	return nil
 }
