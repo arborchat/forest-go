@@ -31,7 +31,12 @@ func unmarshalTextDelimited(b []byte, delimiter string, descriptorType, length e
 	parts := strings.Split(string(b), delimiter)
 	if len(parts) < 2 {
 		return fmt.Errorf("too few \"%s\"-delimited parts (expected %d, got %d)", descriptorTextSeparator, 2, len(parts))
+	} else if len(parts) > 2 {
+		// ensure that occurrences of our delimiter after the first one are ignored
+		parts[1] = strings.Join(parts[1:], delimiter)
+		parts = parts[:2]
 	}
+
 	if err := descriptorType.UnmarshalText([]byte(parts[0])); err != nil {
 		return fmt.Errorf("failed unmarshaling descriptor type: %v", err)
 	}
