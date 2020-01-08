@@ -108,11 +108,10 @@ func create(args []string) error {
 
 func createIdentity(args []string) error {
 	var (
-		name, metadata, keyfile, gpguser string
+		name, keyfile, gpguser string
 	)
 	flags := flag.NewFlagSet(commandCreate+" "+commandIdentity, flag.ExitOnError)
 	flags.StringVar(&name, "name", "forest", "username for the identity node")
-	flags.StringVar(&metadata, "metadata", "\"forest\"", "metadata for the identity node")
 	flags.StringVar(&keyfile, "key", "arbor.privkey", "the openpgp private key for the identity node")
 	flags.StringVar(&gpguser, "gpguser", "", "gpg2 user whose private key should be used to create this node. Supercedes -key.")
 	usage := func() {
@@ -126,7 +125,7 @@ func createIdentity(args []string) error {
 	if err != nil {
 		return err
 	}
-	identity, err := forest.NewIdentity(signer, name, metadata)
+	identity, err := forest.NewIdentity(signer, name, []byte{})
 	if err != nil {
 		return err
 	}
@@ -147,11 +146,10 @@ func createIdentity(args []string) error {
 
 func createCommunity(args []string) error {
 	var (
-		name, metadata, keyfile, identity, gpguser string
+		name, keyfile, identity, gpguser string
 	)
 	flags := flag.NewFlagSet(commandCreate+" "+commandCommunity, flag.ExitOnError)
 	flags.StringVar(&name, "name", "forest", "username for the community node")
-	flags.StringVar(&metadata, "metadata", "\"forest\"", "metadata for the community node")
 	flags.StringVar(&keyfile, "key", "arbor.privkey", "the openpgp private key for the signing identity node")
 	flags.StringVar(&identity, "as", "", "[required] the id of the signing identity node")
 	flags.StringVar(&gpguser, "gpguser", "", "gpg2 user whose private key should be used to create this node. Supercedes -key.")
@@ -171,7 +169,7 @@ func createCommunity(args []string) error {
 		return err
 	}
 
-	community, err := forest.As(idNode, signer).NewCommunity(name, metadata)
+	community, err := forest.As(idNode, signer).NewCommunity(name, []byte{})
 	if err != nil {
 		return err
 	}
@@ -192,10 +190,9 @@ func createCommunity(args []string) error {
 
 func createReply(args []string) error {
 	var (
-		content, metadata, parent, keyfile, identity, gpguser string
+		content, parent, keyfile, identity, gpguser string
 	)
 	flags := flag.NewFlagSet(commandCreate+" "+commandReply, flag.ExitOnError)
-	flags.StringVar(&metadata, "metadata", "\"forest\"", "metadata for the reply node")
 	flags.StringVar(&keyfile, "key", "arbor.privkey", "the openpgp private key for the signing identity node")
 	flags.StringVar(&gpguser, "gpguser", "", "gpg2 user whose private key should be used to create this node. Supercedes -key.")
 	flags.StringVar(&identity, "as", "", "[required] the id of the signing identity node")
@@ -224,7 +221,7 @@ func createReply(args []string) error {
 		return err
 	}
 
-	reply, err := forest.As(idNode, signer).NewReply(parentNode, content, metadata)
+	reply, err := forest.As(idNode, signer).NewReply(parentNode, content, []byte{})
 	if err != nil {
 		return err
 	}

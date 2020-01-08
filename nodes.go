@@ -143,8 +143,8 @@ func (n *CommonNode) ValidateShallow() error {
 			return err
 		}
 	}
-	if n.Metadata.Descriptor.Type != fields.ContentTypeJSON {
-		return fmt.Errorf("Metadata must be JSON, got content type %d", n.Metadata.Descriptor.Type)
+	if n.Metadata.Descriptor.Type != fields.ContentTypeTwig {
+		return fmt.Errorf("Metadata must be twig, got content type %d", n.Metadata.Descriptor.Type)
 	}
 	return nil
 }

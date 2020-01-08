@@ -139,7 +139,7 @@ func (q *QualifiedContent) MarshalText() ([]byte, error) {
 	switch q.Descriptor.Type {
 	case ContentTypeUTF8String:
 		fallthrough
-	case ContentTypeJSON:
+	case ContentTypeTwig:
 		descText, err := (&q.Descriptor).MarshalText()
 		if err != nil {
 			return nil, err

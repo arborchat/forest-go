@@ -367,17 +367,17 @@ type ContentType genericType
 const (
 	sizeofContentType                 = sizeofgenericType
 	ContentTypeUTF8String ContentType = 1
-	ContentTypeJSON       ContentType = 2
+	ContentTypeTwig       ContentType = 2
 )
 
 var ValidContentTypes = map[ContentType]struct{}{
 	ContentTypeUTF8String: struct{}{},
-	ContentTypeJSON:       struct{}{},
+	ContentTypeTwig:       struct{}{},
 }
 
 var ContentNames = map[ContentType]string{
 	ContentTypeUTF8String: "UTF-8",
-	ContentTypeJSON:       "JSON",
+	ContentTypeTwig:       "Twig",
 }
 
 func (t ContentType) MarshalBinary() ([]byte, error) {
