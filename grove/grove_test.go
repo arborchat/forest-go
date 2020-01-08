@@ -300,13 +300,13 @@ type testNodeBuilder struct {
 
 func NewNodeBuilder(t *testing.T) *testNodeBuilder {
 	signer := testkeys.Signer(t, testkeys.PrivKey1)
-	id, err := forest.NewIdentity(signer, "node-builder", "")
+	id, err := forest.NewIdentity(signer, "node-builder", []byte{})
 	if err != nil {
 		t.Errorf("Failed to create identity: %v", err)
 		return nil
 	}
 	builder := forest.As(id, signer)
-	community, err := builder.NewCommunity("nodes-built-for-testing", "")
+	community, err := builder.NewCommunity("nodes-built-for-testing", []byte{})
 	if err != nil {
 		t.Errorf("Failed to create community: %v", err)
 		return nil
@@ -322,7 +322,7 @@ func NewNodeBuilder(t *testing.T) *testNodeBuilder {
 // node that is a direct child of the given community and constructed by the
 // given builder. It returns the reply node as a convenience for testing.
 func (tnb *testNodeBuilder) newReplyFile(content string) (*forest.Reply, *fakeFile) {
-	reply, err := tnb.NewReply(tnb.Community, content, "")
+	reply, err := tnb.NewReply(tnb.Community, content, []byte{})
 	if err != nil {
 		tnb.T.Errorf("Failed generating test reply node: %v", err)
 	}

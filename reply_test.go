@@ -11,7 +11,7 @@ import (
 
 func TestNewReply(t *testing.T) {
 	identity, privkey, community := testutil.MakeCommunityOrSkip(t)
-	reply, err := forest.As(identity, privkey).NewReply(community, "test content", "")
+	reply, err := forest.As(identity, privkey).NewReply(community, "test content", []byte{})
 	if err != nil {
 		t.Error("Failed to create reply with valid parameters", err)
 	}
@@ -29,7 +29,7 @@ func getReplyToReplyOrFail(t *testing.T) (identity1, identity2 *forest.Identity,
 	var err error
 	identity1, privkey, community, reply1 = testutil.MakeReplyOrSkip(t)
 	identity2, privkey = testutil.MakeIdentityFromKeyOrSkip(t, testkeys.PrivKey1, "")
-	reply2, err = forest.As(identity2, privkey).NewReply(reply1, "other test content", "")
+	reply2, err = forest.As(identity2, privkey).NewReply(reply1, "other test content", []byte{})
 	if err != nil {
 		t.Error("Failed to create reply with valid parameters", err)
 	}

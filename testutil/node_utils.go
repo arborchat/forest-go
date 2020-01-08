@@ -14,7 +14,7 @@ import (
 
 func MakeIdentityFromKeyOrSkip(t *testing.T, privKey, passphrase string) (*forest.Identity, forest.Signer) {
 	signer := testkeys.Signer(t, privKey)
-	identity, err := forest.NewIdentity(signer, "test-username", "")
+	identity, err := forest.NewIdentity(signer, "test-username", []byte{})
 	if err != nil {
 		t.Error("Failed to create Identity with valid parameters", err)
 	}
@@ -27,7 +27,7 @@ func MakeIdentityOrSkip(t *testing.T) (*forest.Identity, forest.Signer) {
 
 func MakeCommunityOrSkip(t *testing.T) (*forest.Identity, forest.Signer, *forest.Community) {
 	identity, privkey := MakeIdentityOrSkip(t)
-	community, err := forest.As(identity, privkey).NewCommunity("test community", "")
+	community, err := forest.As(identity, privkey).NewCommunity("test community", []byte{})
 	if err != nil {
 		t.Error("Failed to create Community with valid parameters", err)
 	}
@@ -36,7 +36,7 @@ func MakeCommunityOrSkip(t *testing.T) (*forest.Identity, forest.Signer, *forest
 
 func MakeReplyOrSkip(t *testing.T) (*forest.Identity, forest.Signer, *forest.Community, *forest.Reply) {
 	identity, privkey, community := MakeCommunityOrSkip(t)
-	reply, err := forest.As(identity, privkey).NewReply(community, "more test content", "")
+	reply, err := forest.As(identity, privkey).NewReply(community, "more test content", []byte{})
 	if err != nil {
 		t.Error("Failed to create reply with valid parameters", err)
 	}
@@ -46,7 +46,7 @@ func MakeReplyOrSkip(t *testing.T) (*forest.Identity, forest.Signer, *forest.Com
 func RandomIdentity(t *testing.T) *forest.Identity {
 	signer := testkeys.Signer(t, testkeys.PrivKey1)
 	name := RandomString(12)
-	id, err := forest.NewIdentity(signer, name, "")
+	id, err := forest.NewIdentity(signer, name, []byte{})
 	if err != nil {
 		t.Errorf("Failed to generate test identity: %v", err)
 		return nil

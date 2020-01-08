@@ -86,7 +86,7 @@ func TestGPGSignerAsIdentity(t *testing.T) {
 	}
 	signer, cleanup := getGPGSignerOrFail(t)
 	defer cleanup()
-	identity, err := forest.NewIdentity(signer, "test name", "")
+	identity, err := forest.NewIdentity(signer, "test name", []byte{})
 	if err != nil {
 		t.Fatal("Failed to create Identity with valid parameters", err)
 	}

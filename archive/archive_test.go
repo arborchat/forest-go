@@ -17,35 +17,35 @@ func testStore(t *testing.T) (forest.Store, setup) {
 	store := forest.NewMemoryStore()
 	setup := setup{}
 	signer := testkeys.Signer(t, testkeys.PrivKey1)
-	identity, err := forest.NewIdentity(signer, "archivetest", "")
+	identity, err := forest.NewIdentity(signer, "archivetest", []byte{})
 	if err != nil {
 		t.Fatalf("failed making test identity: %v", err)
 	}
 	store.Add(identity)
 	setup.identity = identity
 	builder := forest.As(identity, signer)
-	community, err := builder.NewCommunity("archivetest1", "")
+	community, err := builder.NewCommunity("archivetest1", []byte{})
 	if err != nil {
 		t.Fatalf("failed making test community: %v", err)
 	}
 	store.Add(community)
 	setup.community = community
-	setup.r1, err = builder.NewReply(community, "r1", "")
+	setup.r1, err = builder.NewReply(community, "r1", []byte{})
 	if err != nil {
 		t.Fatalf("failing creating reply: %v", err)
 	}
 	store.Add(setup.r1)
-	setup.r2, err = builder.NewReply(setup.r1, "r2", "")
+	setup.r2, err = builder.NewReply(setup.r1, "r2", []byte{})
 	if err != nil {
 		t.Fatalf("failing creating reply: %v", err)
 	}
 	store.Add(setup.r2)
-	setup.r3a, err = builder.NewReply(setup.r2, "r3a", "")
+	setup.r3a, err = builder.NewReply(setup.r2, "r3a", []byte{})
 	if err != nil {
 		t.Fatalf("failing creating reply: %v", err)
 	}
 	store.Add(setup.r3a)
-	setup.r3b, err = builder.NewReply(setup.r2, "r3b", "")
+	setup.r3b, err = builder.NewReply(setup.r2, "r3b", []byte{})
 	if err != nil {
 		t.Fatalf("failing creating reply: %v", err)
 	}

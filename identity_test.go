@@ -11,7 +11,7 @@ import (
 
 func TestIdentityNewline(t *testing.T) {
 	signer := testkeys.Signer(t, testkeys.PrivKey1)
-	_, err := forest.NewIdentity(signer, "newline-in\nusername", "")
+	_, err := forest.NewIdentity(signer, "newline-in\nusername", []byte{})
 	if err == nil {
 		t.Error("Failed to error with newline in username")
 	}

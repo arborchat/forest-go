@@ -10,7 +10,7 @@ import (
 
 func TestCommunityNewline(t *testing.T) {
 	identity, privkey := testutil.MakeIdentityOrSkip(t)
-	_, err := forest.As(identity, privkey).NewCommunity("string with \n newline", "")
+	_, err := forest.As(identity, privkey).NewCommunity("string with \n newline", []byte{})
 	if err == nil {
 		t.Error("Failed to raise error in Community with newline in name")
 	}
