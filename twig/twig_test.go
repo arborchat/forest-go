@@ -1,6 +1,7 @@
 package twig_test
 
 import (
+	"bytes"
 	"testing"
 
 	"git.sr.ht/~whereswaldon/forest-go/twig"
@@ -40,5 +41,24 @@ func TestKeys(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestDataMarshal(t *testing.T) {
+	data := twig.New()
+	data.Values[twig.Key{Name: "example", Version: 11}] = []byte("hello")
+	data.Values[twig.Key{Name: "another", Version: 423}] = []byte("")
+	asBin, err := data.MarshalBinary()
+	if err != nil {
+		t.Fatalf("Failed to marshal valid Data: %v", err)
+	}
+	data2 := twig.New()
+	if err := data2.UnmarshalBinary(asBin); err != nil {
+		t.Fatalf("Failed to unmarshal valid Data: %v", err)
+	}
+	for key, value := range data.Values {
+		if !bytes.Equal(value, data2.Values[key]) {
+			t.Fatalf("different data at key %s", key)
+		}
 	}
 }
