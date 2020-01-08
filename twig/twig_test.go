@@ -31,6 +31,9 @@ func TestKeys(t *testing.T) {
 				} else if key.Version != row.Key.Version {
 					t.Fatalf("expected version %d, got %d", row.Key.Version, key.Version)
 				}
+				if row.KeyString != key.String() {
+					t.Fatalf("expected key.String() to produce %s, got %s", row.KeyString, key.String())
+				}
 			} else {
 				if err == nil {
 					t.Fatalf("should have errored")
