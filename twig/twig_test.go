@@ -62,3 +62,14 @@ func TestDataMarshal(t *testing.T) {
 		}
 	}
 }
+
+func TestDataMarshalBadKey(t *testing.T) {
+	data := twig.New()
+	data.Values[twig.Key{Name: "", Version: 423}] = []byte("")
+	asBin, err := data.MarshalBinary()
+	if err == nil {
+		t.Fatalf("Should have failed to marshal illegal empty key")
+	} else if asBin != nil {
+		t.Fatalf("Should have returned nil slice when failing to marshal")
+	}
+}
