@@ -3,6 +3,7 @@ package twig
 import (
 	"bytes"
 	"fmt"
+	"strings"
 )
 
 type Key struct {
@@ -10,15 +11,25 @@ type Key struct {
 	Version uint
 }
 
-const keyFormat = "%s/%d"
+const keyDelimiter = "/"
+const keyVersionFormat = "%d"
+const keyFormat = "%s" + keyDelimiter + keyVersionFormat
 
 func FromString(s string) (Key, error) {
 	key := Key{}
-	numRead, err := fmt.Scanf(keyFormat, &key.Name, &key.Version)
+	parts := strings.SplitN(s, keyDelimiter, 2)
+	if len(parts) < 2 {
+		return key, fmt.Errorf("failed reading key, need 2 values, got %d", len(parts))
+	}
+	key.Name = parts[0]
+	if len(key.Name) < 1 {
+		return key, fmt.Errorf("key name must be non-empty: %s", s)
+	}
+	numRead, err := fmt.Sscanf(parts[1], keyVersionFormat, &key.Version)
 	if err != nil {
 		return key, fmt.Errorf("failed scanning twig key %s: %w", s, err)
-	} else if numRead < 2 {
-		return key, fmt.Errorf("failed scanning twig key %s, only got %d values but needed %d", s, numRead, 2)
+	} else if numRead < 1 {
+		return key, fmt.Errorf("failed scanning twig key %s, only got %d values but needed %d", s, numRead, 1)
 	}
 	return key, nil
 }
