@@ -3,7 +3,7 @@ Package twig implements the twig key-value data format.
 
 Twig is a simple text key-value format. Keys and values are separated by NULL
 bytes (bytes of value 0). Keys and values may not contain a NULL byte. In values,
-all other characters are allowed. In keys, all characters other than the keyDelimiter (currently '/') are allowed.
+all other characters are allowed. In keys, all characters other than the keyDelimiter (currently '/') and the NULL byte  are allowed.
 
 Keys have an additional constraint. Each key must contain a "name" and a "version"
 number. These describe the semantics of the data stored for that key, and the
