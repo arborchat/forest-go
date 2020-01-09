@@ -7,11 +7,13 @@ All other characters are allowed.
 
 Keys have an additional constraint. Each key must contain a "name" and a "version"
 number. These describe the semantics of the data stored for that key, and the
-precise meaning is left to the user.
+precise meaning is left to the user. The key and name are separated (in the binary
+format) by a delimiter, which is currently '/'.
 
 The key name may not be empty.
 
-In practice, twig keys look like:
+In practice, twig keys look like (the final slash is the delimiter between key
+and version):
 
     anexample/235 // name: anexample, version: 235
     heres one with spaces/9 // name: heres one with spaces, version: 9
