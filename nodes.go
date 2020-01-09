@@ -7,6 +7,7 @@ import (
 
 	"git.sr.ht/~whereswaldon/forest-go/fields"
 	"git.sr.ht/~whereswaldon/forest-go/serialize"
+	"git.sr.ht/~whereswaldon/forest-go/twig"
 )
 
 const MaxNameLength = 256
@@ -168,6 +169,18 @@ func (n *CommonNode) ValidateDeep(store Store) error {
 		}
 	}
 	return nil
+}
+
+// TwigMetadata returns the metadata of this node parsed into a *twig.Data
+func (n *CommonNode) TwigMetadata() (*twig.Data, error) {
+	if n.Metadata.Descriptor.Type != fields.ContentTypeTwig {
+		return nil, fmt.Errorf("metadata is not twig on this node")
+	}
+	data := twig.New()
+	if err := data.UnmarshalBinary(n.Metadata.Blob); err != nil {
+		return nil, fmt.Errorf("failed converting metadata into twig: %w", err)
+	}
+	return data, nil
 }
 
 // Trailer is the final set of fields in every arbor node
