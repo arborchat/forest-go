@@ -17,8 +17,15 @@ func TestKeys(t *testing.T) {
 		{"empty key", "", false, twig.Key{}},
 		{"no fields key", "/", false, twig.Key{}},
 		{"only version key", "/0", false, twig.Key{}},
+		{"only long version key", "/340", false, twig.Key{}},
 		{"only name key", "a/", false, twig.Key{}},
+		{"only long name key", "alongversion/", false, twig.Key{}},
 		{"version and name key", "a/1", true, twig.Key{Name: "a", Version: 1}},
+		{"long version and long name key", "alongversion/231", true, twig.Key{Name: "alongversion", Version: 231}},
+		{"delimiter in name", "a/a/1", true, twig.Key{Name: "a/a", Version: 1}},
+		{"delimiter in long name", "along/version/1", true, twig.Key{Name: "along/version", Version: 1}},
+		{"whitespace in name", " /1", true, twig.Key{Name: " ", Version: 1}},
+		{"whitespace in long name", "along \t\nversion/1", true, twig.Key{Name: "along \t\nversion", Version: 1}},
 	}
 	for _, row := range table {
 		t.Run(row.CaseName, func(t *testing.T) {

@@ -2,8 +2,8 @@
 Package twig implements the twig key-value data format.
 
 Twig is a simple text key-value format. Keys and values are separated by NULL
-bytes (bytes of value 0). Keys and values may not contain a NULL byte. In values,
-all other characters are allowed. In keys, all characters other than the keyDelimiter (currently '/') and the NULL byte  are allowed.
+bytes (bytes of value 0). Keys and values may not contain a NULL byte.
+All other characters are allowed.
 
 Keys have an additional constraint. Each key must contain a "name" and a "version"
 number. These describe the semantics of the data stored for that key, and the
@@ -13,15 +13,15 @@ The key name may not be empty.
 
 In practice, twig keys look like:
 
-    anexample/235
-    heres one with spaces/9
+    anexample/235 // name: anexample, version: 235
+    heres one with spaces/9 // name: heres one with spaces, version: 9
+    heres/one/with/slashes/9 // name: heres/one/with/slashes, version: 9
 */
 package twig
 
 import (
 	"bytes"
 	"fmt"
-	"strings"
 )
 
 // Key represents a key within the twig data
@@ -37,10 +37,18 @@ const keyFormat = "%s" + keyDelimiter + keyVersionFormat
 // FromString converts a string into a Key struct by separating the name and version
 func FromString(s string) (Key, error) {
 	key := Key{}
-	parts := strings.SplitN(s, keyDelimiter, 2)
-	if len(parts) < 2 {
-		return key, fmt.Errorf("failed reading key, need 2 values, got %d", len(parts))
+	lastDelimiterPos := 0
+	for position, char := range s {
+		if char == rune(keyDelimiter[0]) {
+			lastDelimiterPos = position
+		}
 	}
+	if lastDelimiterPos == 0 {
+		return key, fmt.Errorf("last delimiter in key was on first byte: %s", s)
+	} else if lastDelimiterPos > len(s)-2 {
+		return key, fmt.Errorf("last delimiter too close to end of key: %s", s)
+	}
+	parts := []string{s[:lastDelimiterPos], s[lastDelimiterPos+1:]}
 	key.Name = parts[0]
 	if len(key.Name) < 1 {
 		return key, fmt.Errorf("key name must be non-empty: %s", s)
