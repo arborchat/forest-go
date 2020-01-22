@@ -141,6 +141,7 @@ func (g *Grove) getAllNodeFileInfo() ([]os.FileInfo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed opening grove root dir: %w", err)
 	}
+	defer rootDir.Close()
 	info, err := rootDir.Readdir(-1) // read whole directory at once. Inefficient
 	if err != nil {
 		return nil, fmt.Errorf("failed listing files in grove: %w", err)
@@ -165,6 +166,7 @@ func (g *Grove) nodeFromInfo(info os.FileInfo) (forest.Node, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed opening node file %s: %w", info.Name(), err)
 	}
+	defer nodeFile.Close()
 	nodeData, err := ioutil.ReadAll(nodeFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed reading node file %s: %w", info.Name(), err)
