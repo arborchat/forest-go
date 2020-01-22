@@ -32,7 +32,7 @@ func getKey(privKey, passphrase string) (*openpgp.Entity, error) {
 
 // Signer creates a signer suitable ONLY FOR USE IN TEST CASES.
 func Signer(t *testing.T, privKey string) forest.Signer {
-	privkey, err := getKey(privKey, testKeyPassphrase)
+	privkey, err := getKey(privKey, TestKeyPassphrase)
 	if err != nil {
 		t.Skip("Failed to create private key", err)
 	}
@@ -43,7 +43,7 @@ func Signer(t *testing.T, privKey string) forest.Signer {
 	return signer
 }
 
-const testKeyPassphrase = "pleasedonotusethisasapassword"
+const TestKeyPassphrase = "pleasedonotusethisasapassword"
 const PrivKey1 = `-----BEGIN PGP PRIVATE KEY BLOCK-----
 
 lQPGBF0VVHoBCAC0cCCvM0O2IwlNBMIqA53h9t3YU9BcbDYCTGx0tmkNmBW6hoQ9

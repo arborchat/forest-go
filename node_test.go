@@ -4,10 +4,11 @@ import (
 	"testing"
 
 	forest "git.sr.ht/~whereswaldon/forest-go"
+	"git.sr.ht/~whereswaldon/forest-go/testutil"
 )
 
 func TestUnmarshalNode(t *testing.T) {
-	id, _, community, reply := MakeReplyOrSkip(t)
+	id, _, community, reply := testutil.MakeReplyOrSkip(t)
 	for _, node := range []forest.Node{id, community, reply} {
 		bin, err := node.MarshalBinary()
 		if err != nil {

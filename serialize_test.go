@@ -7,11 +7,12 @@ import (
 
 	forest "git.sr.ht/~whereswaldon/forest-go"
 	"git.sr.ht/~whereswaldon/forest-go/serialize"
+	"git.sr.ht/~whereswaldon/forest-go/testutil"
 )
 
 func TestNewArborSerializerSymmetry(t *testing.T) {
-	identity, _, community, reply := MakeReplyOrSkip(t)
-	identity2, _, community2, reply2 := MakeReplyOrSkip(t)
+	identity, _, community, reply := testutil.MakeReplyOrSkip(t)
+	identity2, _, community2, reply2 := testutil.MakeReplyOrSkip(t)
 	nodes := []forest.Node{identity, community, reply}
 	outNodes := []forest.Node{identity2, community2, reply2}
 	for i, node := range nodes {

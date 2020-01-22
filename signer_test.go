@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	forest "git.sr.ht/~whereswaldon/forest-go"
+	"git.sr.ht/~whereswaldon/forest-go/testkeys"
 )
 
 // ensureGPGInstalled will cause the calling test to be skipped if GPG
@@ -21,9 +22,8 @@ func ensureGPGInstalled(t *testing.T) string {
 	return gpg
 }
 
-const testPassphrase = testKeyPassphrase
 const testUsername = "Arbor-Dev-Untrusted-Test-01"
-const testData = testPassphrase
+const testData = "testdata"
 
 // TestGPGSigner creates a new GPG key in a temporary directory and signs some data.
 func TestGPGSigner(t *testing.T) {
@@ -51,7 +51,7 @@ func getGPGSignerOrFail(t *testing.T) (forest.Signer, func()) {
 	}
 
 	tempkey, err := ioutil.TempFile(tempdir, "testPrivKey.key")
-	if _, err = tempkey.Write([]byte(privKey1)); err != nil {
+	if _, err = tempkey.Write([]byte(testkeys.PrivKey1)); err != nil {
 		t.Errorf("Failed to create temporary gpg key: %v", err)
 	}
 
@@ -72,7 +72,7 @@ func getGPGSignerOrFail(t *testing.T) (forest.Signer, func()) {
 		cleanup()
 	}
 	signer.Rewriter = func(gpg2 *exec.Cmd) error {
-		gpg2.Args = append(append(gpg2.Args[:1], "--yes", "--batch", "--pinentry-mode", "loopback", "--passphrase", testKeyPassphrase), gpg2.Args[1:]...)
+		gpg2.Args = append(append(gpg2.Args[:1], "--yes", "--batch", "--pinentry-mode", "loopback", "--passphrase", testkeys.TestKeyPassphrase), gpg2.Args[1:]...)
 		gpg2.Env = []string{"GNUPGHOME=" + tempdir}
 		gpg2.Stderr = os.Stderr
 		return nil

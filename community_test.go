@@ -5,19 +5,11 @@ import (
 
 	forest "git.sr.ht/~whereswaldon/forest-go"
 	"git.sr.ht/~whereswaldon/forest-go/fields"
+	"git.sr.ht/~whereswaldon/forest-go/testutil"
 )
 
-func MakeCommunityOrSkip(t *testing.T) (*forest.Identity, forest.Signer, *forest.Community) {
-	identity, privkey := MakeIdentityOrSkip(t)
-	community, err := forest.As(identity, privkey).NewCommunity("test community", "")
-	if err != nil {
-		t.Error("Failed to create Community with valid parameters", err)
-	}
-	return identity, privkey, community
-}
-
 func TestCommunityNewline(t *testing.T) {
-	identity, privkey := MakeIdentityOrSkip(t)
+	identity, privkey := testutil.MakeIdentityOrSkip(t)
 	_, err := forest.As(identity, privkey).NewCommunity("string with \n newline", "")
 	if err == nil {
 		t.Error("Failed to raise error in Community with newline in name")
@@ -25,7 +17,7 @@ func TestCommunityNewline(t *testing.T) {
 }
 
 func TestCommunityValidatesSelf(t *testing.T) {
-	identity, _, community := MakeCommunityOrSkip(t)
+	identity, _, community := testutil.MakeCommunityOrSkip(t)
 	if correct, err := forest.ValidateID(community, *community.ID()); err != nil || !correct {
 		t.Error("ID validation failed on unmodified node", err)
 	}
@@ -35,7 +27,7 @@ func TestCommunityValidatesSelf(t *testing.T) {
 }
 
 func TestCommunityValidationFailsWhenTampered(t *testing.T) {
-	identity, _, community := MakeCommunityOrSkip(t)
+	identity, _, community := testutil.MakeCommunityOrSkip(t)
 	community.Name.Blob = fields.Blob([]byte("whatever"))
 	if correct, err := forest.ValidateID(community, *community.ID()); err == nil && correct {
 		t.Error("ID validation failed on unmodified node", err)
@@ -46,7 +38,7 @@ func TestCommunityValidationFailsWhenTampered(t *testing.T) {
 }
 
 func TestCommunitySerialize(t *testing.T) {
-	_, _, community := MakeCommunityOrSkip(t)
+	_, _, community := testutil.MakeCommunityOrSkip(t)
 	buf, err := community.MarshalBinary()
 	if err != nil {
 		t.Error("Failed to serialize identity", err)

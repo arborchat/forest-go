@@ -5,6 +5,7 @@ import (
 
 	forest "git.sr.ht/~whereswaldon/forest-go"
 	"git.sr.ht/~whereswaldon/forest-go/fields"
+	"git.sr.ht/~whereswaldon/forest-go/testutil"
 )
 
 func TestMemoryStore(t *testing.T) {
@@ -14,7 +15,7 @@ func TestMemoryStore(t *testing.T) {
 
 func testStandardStoreInterface(t *testing.T, s forest.Store, storeImplName string) {
 	// create three test nodes, one of each type
-	identity, _, community, reply := MakeReplyOrSkip(t)
+	identity, _, community, reply := testutil.MakeReplyOrSkip(t)
 	nodes := []forest.Node{identity, community, reply}
 
 	// create a set of functions that perform different "Get" operations on nodes
@@ -98,7 +99,7 @@ func testStandardStoreInterface(t *testing.T, s forest.Store, storeImplName stri
 	}
 
 	// add some more nodes so that we can test the Recent method
-	identity2, _, community2, reply2 := MakeReplyOrSkip(t)
+	identity2, _, community2, reply2 := testutil.MakeReplyOrSkip(t)
 	for _, i := range []forest.Node{identity2, community2, reply2} {
 		if err := s.Add(i); err != nil {
 			t.Errorf("%s Add() should not err on Add(): %s", storeImplName, err)
@@ -164,7 +165,7 @@ func TestCacheStore(t *testing.T) {
 
 func TestCacheStoreDownPropagation(t *testing.T) {
 	s1 := forest.NewMemoryStore()
-	id, _, com, rep := MakeReplyOrSkip(t)
+	id, _, com, rep := testutil.MakeReplyOrSkip(t)
 	nodes := []forest.Node{id, com, rep}
 	subrange := nodes[:len(nodes)-1]
 	for _, node := range subrange {
@@ -190,7 +191,7 @@ func TestCacheStoreDownPropagation(t *testing.T) {
 
 func TestCacheStoreUpPropagation(t *testing.T) {
 	base := forest.NewMemoryStore()
-	id, _, com, rep := MakeReplyOrSkip(t)
+	id, _, com, rep := testutil.MakeReplyOrSkip(t)
 	nodes := []forest.Node{id, com, rep}
 	subrange := nodes[:len(nodes)-1]
 	for _, node := range subrange {

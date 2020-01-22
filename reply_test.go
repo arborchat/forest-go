@@ -5,10 +5,12 @@ import (
 
 	forest "git.sr.ht/~whereswaldon/forest-go"
 	"git.sr.ht/~whereswaldon/forest-go/fields"
+	"git.sr.ht/~whereswaldon/forest-go/testkeys"
+	"git.sr.ht/~whereswaldon/forest-go/testutil"
 )
 
 func TestNewReply(t *testing.T) {
-	identity, privkey, community := MakeCommunityOrSkip(t)
+	identity, privkey, community := testutil.MakeCommunityOrSkip(t)
 	reply, err := forest.As(identity, privkey).NewReply(community, "test content", "")
 	if err != nil {
 		t.Error("Failed to create reply with valid parameters", err)
@@ -25,8 +27,8 @@ func TestNewReply(t *testing.T) {
 func getReplyToReplyOrFail(t *testing.T) (identity1, identity2 *forest.Identity, reply1, reply2 *forest.Reply, community *forest.Community) {
 	var privkey forest.Signer
 	var err error
-	identity1, privkey, community, reply1 = MakeReplyOrSkip(t)
-	identity2, privkey = MakeIdentityFromKeyOrSkip(t, privKey2, testKeyPassphrase)
+	identity1, privkey, community, reply1 = testutil.MakeReplyOrSkip(t)
+	identity2, privkey = testutil.MakeIdentityFromKeyOrSkip(t, testkeys.PrivKey1, "")
 	reply2, err = forest.As(identity2, privkey).NewReply(reply1, "other test content", "")
 	if err != nil {
 		t.Error("Failed to create reply with valid parameters", err)
@@ -46,17 +48,8 @@ func TestNewReplyToReply(t *testing.T) {
 	}
 }
 
-func MakeReplyOrSkip(t *testing.T) (*forest.Identity, forest.Signer, *forest.Community, *forest.Reply) {
-	identity, privkey, community := MakeCommunityOrSkip(t)
-	reply, err := forest.As(identity, privkey).NewReply(community, "more test content", "")
-	if err != nil {
-		t.Error("Failed to create reply with valid parameters", err)
-	}
-	return identity, privkey, community, reply
-}
-
 func TestReplyValidatesSelf(t *testing.T) {
-	identity, _, _, reply := MakeReplyOrSkip(t)
+	identity, _, _, reply := testutil.MakeReplyOrSkip(t)
 	validateReply(t, identity, reply)
 }
 
@@ -79,7 +72,7 @@ func validateReply(t *testing.T, author *forest.Identity, reply *forest.Reply) {
 }
 
 func TestReplyValidationFailsWhenTampered(t *testing.T) {
-	identity, _, _, reply := MakeReplyOrSkip(t)
+	identity, _, _, reply := testutil.MakeReplyOrSkip(t)
 	reply.Content.Blob = fields.Blob([]byte("whatever"))
 	failToValidateReply(t, identity, reply)
 }
@@ -99,7 +92,7 @@ func ensureSerializes(t *testing.T, reply *forest.Reply) {
 }
 
 func TestReplySerializes(t *testing.T) {
-	_, _, _, reply := MakeReplyOrSkip(t)
+	_, _, _, reply := testutil.MakeReplyOrSkip(t)
 	ensureSerializes(t, reply)
 }
 
