@@ -77,6 +77,7 @@ func (r RelativeFS) OpenFile(path string, flag int, perm os.FileMode) (File, err
 // (it is not an error to call Add() on a node already present in a store).
 type Grove struct {
 	FS
+	NodeCache *forest.MemoryStore
 	*ChildCache
 }
 
@@ -94,6 +95,7 @@ func NewWithFS(fs FS) (*Grove, error) {
 	}
 	return &Grove{
 		FS:         fs,
+		NodeCache:  forest.NewMemoryStore(),
 		ChildCache: NewChildCache(),
 	}, nil
 }
@@ -105,6 +107,10 @@ func NewWithFS(fs FS) (*Grove, error) {
 // actual node struct. If the file holding a node exists on disk but was unable
 // to be opened, read, or parsed, `present` will still be false.
 func (g *Grove) Get(nodeID *fields.QualifiedHash) (node forest.Node, present bool, err error) {
+	node, inCache, _ := g.NodeCache.Get(nodeID)
+	if inCache {
+		return node, true, nil
+	}
 	filename := nodeID.String()
 	file, err := g.Open(filename)
 	// if the file doesn't exist, just return false with no error
@@ -123,6 +129,7 @@ func (g *Grove) Get(nodeID *fields.QualifiedHash) (node forest.Node, present boo
 	if err != nil {
 		return nil, false, fmt.Errorf("failed unmarshalling node from \"%s\": %w", filename, err)
 	}
+	_ = g.NodeCache.Add(node)
 	return node, true, nil
 }
 
@@ -192,6 +199,9 @@ func (g *Grove) allNodes() ([]forest.Node, error) {
 	nodes, err := g.nodesFromInfo(nodeInfo)
 	if err != nil {
 		return nil, fmt.Errorf("failed converting node files into nodes: %w", err)
+	}
+	for _, node := range nodes {
+		_ = g.NodeCache.Add(node)
 	}
 	return nodes, nil
 }
