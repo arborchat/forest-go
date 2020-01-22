@@ -211,9 +211,6 @@ func (g *Grove) allNodes() ([]forest.Node, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed converting node files into nodes: %w", err)
 	}
-	for _, node := range nodes {
-		_ = g.NodeCache.Add(node)
-	}
 	return nodes, nil
 }
 

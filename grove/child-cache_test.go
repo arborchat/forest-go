@@ -47,3 +47,21 @@ func TestChildCache(t *testing.T) {
 		t.Fatalf("id added only as a child should not have children")
 	}
 }
+
+func TestChildCacheAddDuplicate(t *testing.T) {
+	parent := testutil.RandomQualifiedHash()
+	id1 := testutil.RandomQualifiedHash()
+	id2 := *id1 // copy the data
+
+	cache := grove.NewChildCache()
+
+	cache.Add(parent, id1)
+	cache.Add(parent, &id2)
+	results, hit := cache.Get(parent)
+	if !hit {
+		t.Fatalf("should have hit")
+	}
+	if len(results) != 1 {
+		t.Fatalf("expected %d results, got %d", 1, len(results))
+	}
+}

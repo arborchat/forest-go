@@ -5,13 +5,13 @@ import "git.sr.ht/~whereswaldon/forest-go/fields"
 // ChildCache provides a simple API for keeping track of which node IDs
 // are known to be children of which other node IDs.
 type ChildCache struct {
-	Elements map[string]map[*fields.QualifiedHash]struct{}
+	Elements map[string]map[string]*fields.QualifiedHash
 }
 
 // NewChildCache creates a new empty child cache
 func NewChildCache() *ChildCache {
 	return &ChildCache{
-		Elements: make(map[string]map[*fields.QualifiedHash]struct{}),
+		Elements: make(map[string]map[string]*fields.QualifiedHash),
 	}
 }
 
@@ -19,11 +19,11 @@ func NewChildCache() *ChildCache {
 func (c *ChildCache) Add(parent *fields.QualifiedHash, children ...*fields.QualifiedHash) {
 	submap, inMap := c.Elements[parent.String()]
 	if !inMap {
-		submap = make(map[*fields.QualifiedHash]struct{})
+		submap = make(map[string]*fields.QualifiedHash)
 		c.Elements[parent.String()] = submap
 	}
 	for _, child := range children {
-		submap[child] = struct{}{}
+		submap[child.String()] = child
 	}
 
 }
@@ -36,7 +36,7 @@ func (c *ChildCache) Get(parent *fields.QualifiedHash) ([]*fields.QualifiedHash,
 		return nil, false
 	}
 	out := make([]*fields.QualifiedHash, 0, len(submap))
-	for child := range submap {
+	for _, child := range submap {
 		out = append(out, child)
 	}
 	return out, true
