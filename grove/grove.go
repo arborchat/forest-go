@@ -162,6 +162,14 @@ func (g *Grove) getAllNodeFileInfo() ([]os.FileInfo, error) {
 // nodeFromInfo converts the info about a file into a node extracted from
 // the contents of that file (it opens, reads, and parses the file).
 func (g *Grove) nodeFromInfo(info os.FileInfo) (forest.Node, error) {
+	nodeIDString := info.Name()
+	nodeID := &fields.QualifiedHash{}
+	if err := nodeID.UnmarshalText([]byte(nodeIDString)); err != nil {
+		return nil, fmt.Errorf("unable to parse %s as a node id: %w", nodeIDString, err)
+	}
+	if node, present, _ := g.NodeCache.Get(nodeID); present {
+		return node, nil
+	}
 	nodeFile, err := g.Open(info.Name())
 	if err != nil {
 		return nil, fmt.Errorf("failed opening node file %s: %w", info.Name(), err)
@@ -175,6 +183,7 @@ func (g *Grove) nodeFromInfo(info os.FileInfo) (forest.Node, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed parsing node file %s: %w", info.Name(), err)
 	}
+	_ = g.NodeCache.Add(node)
 	return node, nil
 }
 
