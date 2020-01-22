@@ -69,9 +69,15 @@ func (r RelativeFS) OpenFile(path string, flag int, perm os.FileMode) (File, err
 	return os.OpenFile(r.resolve(path), flag, perm)
 }
 
-// Grove is an on-disk store for arbor forest nodes.
+// Grove is an on-disk store for arbor forest nodes. It maintains internal
+// in-memory caches in order to accelerate certain expensive operations.
+// Because of this, it must be notified when new content appears on disk.
+// The recommended way to handle this is to use file-system watching on
+// the grove directory and to call Add() with any new nodes that appear
+// (it is not an error to call Add() on a node already present in a store).
 type Grove struct {
 	FS
+	*ChildCache
 }
 
 // New constructs a Grove that stores nodes in a hierarchy rooted at
@@ -87,7 +93,8 @@ func NewWithFS(fs FS) (*Grove, error) {
 		return nil, fmt.Errorf("fs cannot be nil")
 	}
 	return &Grove{
-		FS: fs,
+		FS:         fs,
+		ChildCache: NewChildCache(),
 	}, nil
 }
 
@@ -194,15 +201,16 @@ func (g *Grove) allNodes() ([]forest.Node, error) {
 // during the search for child nodes will cause the entire operation to
 // error.
 func (g *Grove) Children(id *fields.QualifiedHash) ([]*fields.QualifiedHash, error) {
-	nodes, err := g.allNodes()
-	if err != nil {
-		return nil, fmt.Errorf("failed getting all nodes from grove: %w", err)
+	children, inCache := g.ChildCache.Get(id)
+	if inCache {
+		return children, nil
 	}
-	children := make([]*fields.QualifiedHash, 0, len(nodes))
-	for _, node := range nodes {
-		if node.ParentID().Equals(id) {
-			children = append(children, node.ID())
-		}
+	if err := g.RebuildChildCache(); err != nil {
+		return nil, fmt.Errorf("failed rebuilding child cache: %w", err)
+	}
+	children, inCache = g.ChildCache.Get(id)
+	if !inCache {
+		return []*fields.QualifiedHash{}, nil
 	}
 
 	return children, nil
@@ -259,10 +267,25 @@ func (g *Grove) Recent(nodeType fields.NodeType, quantity int) ([]forest.Node, e
 	return rightType, nil
 }
 
+// RebuildChildCache must be called each time a node is inserted into the
+// underlying storage without actually calling Add() on the grove. Without
+// this, calls to Children() will not always include new results.
+func (g *Grove) RebuildChildCache() error {
+	nodes, err := g.allNodes()
+	if err != nil {
+		return fmt.Errorf("failed getting all nodes from grove: %w", err)
+	}
+	for _, node := range nodes {
+		g.ChildCache.Add(node.ParentID(), node.ID())
+	}
+	return nil
+}
+
 // Add inserts the node into the grove. If the given node is already in the
 // grove, Add will do nothing. It is not an error to insert a node more than
 // once.
 func (g *Grove) Add(node forest.Node) error {
+	g.ChildCache.Add(node.ParentID(), node.ID())
 	if _, alreadyPresent, err := g.Get(node.ID()); err != nil {
 		return fmt.Errorf("failed checking whether node already in grove: %w", err)
 	} else if alreadyPresent {

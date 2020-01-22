@@ -584,8 +584,24 @@ func TestGroveChildren(t *testing.T) {
 	fs := newFakeFS()
 	fakeNodeBuilder := NewNodeBuilder(t)
 	reply, replyFile := fakeNodeBuilder.newReplyFile("test content")
-	_, replyFile1 := fakeNodeBuilder.newReplyFile("test content")
-	_, replyFile2 := fakeNodeBuilder.newReplyFile("test content")
+	reply1, replyFile1 := fakeNodeBuilder.newReplyFile("test content")
+	reply2, replyFile2 := fakeNodeBuilder.newReplyFile("test content")
+	identity := fakeNodeBuilder.Builder.User
+	identityData, err := identity.MarshalBinary()
+	idFileName, _ := identity.ID().MarshalString()
+	idFile := newFakeFile(idFileName, identityData)
+	community := fakeNodeBuilder.Community
+	communityData, err := community.MarshalBinary()
+	communityFileName, _ := community.ID().MarshalString()
+	communityFile := newFakeFile(communityFileName, communityData)
+
+	resetAll := func() {
+		replyFile.ResetBuffer()
+		replyFile1.ResetBuffer()
+		replyFile2.ResetBuffer()
+		idFile.ResetBuffer()
+		communityFile.ResetBuffer()
+	}
 	g, err := grove.NewWithFS(fs)
 	if err != nil {
 		t.Errorf("Failed constructing grove: %v", err)
@@ -594,16 +610,8 @@ func TestGroveChildren(t *testing.T) {
 	// add node to fs, now should be discoverable
 	fs.files[replyFile.Name()] = replyFile
 
-	identity := fakeNodeBuilder.Builder.User
-	identityData, err := identity.MarshalBinary()
-	idFileName, _ := identity.ID().MarshalString()
-	idFile := newFakeFile(idFileName, identityData)
 	fs.files[idFile.Name()] = idFile
 
-	community := fakeNodeBuilder.Community
-	communityData, err := community.MarshalBinary()
-	communityFileName, _ := community.ID().MarshalString()
-	communityFile := newFakeFile(communityFileName, communityData)
 	fs.files[communityFile.Name()] = communityFile
 
 	if children, err := g.Children(identity.ID()); err != nil {
@@ -613,9 +621,7 @@ func TestGroveChildren(t *testing.T) {
 	}
 
 	// reset fakeFiles so they can be read again
-	replyFile.ResetBuffer()
-	idFile.ResetBuffer()
-	communityFile.ResetBuffer()
+	resetAll()
 
 	if children, err := g.Children(community.ID()); err != nil {
 		t.Errorf("Expected looking for community children to succeed: %v", err)
@@ -626,12 +632,12 @@ func TestGroveChildren(t *testing.T) {
 	}
 
 	// reset fakeFiles so they can be read again
-	replyFile.ResetBuffer()
-	idFile.ResetBuffer()
-	communityFile.ResetBuffer()
+	resetAll()
 
 	fs.files[replyFile1.Name()] = replyFile1
 	fs.files[replyFile2.Name()] = replyFile2
+	_ = g.Add(reply1)
+	_ = g.Add(reply2)
 
 	if children, err := g.Children(community.ID()); err != nil {
 		t.Errorf("Expected looking for community children to succeed: %v", err)
