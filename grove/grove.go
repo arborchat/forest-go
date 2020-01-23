@@ -75,6 +75,8 @@ func (r RelativeFS) OpenFile(path string, flag int, perm os.FileMode) (File, err
 // The recommended way to handle this is to use file-system watching on
 // the grove directory and to call Add() with any new nodes that appear
 // (it is not an error to call Add() on a node already present in a store).
+// Another (potentially more expensive) way to ensure consistency in the
+// event of a disk modification is to call RebuildChildCache().
 type Grove struct {
 	FS
 	NodeCache *forest.MemoryStore
@@ -294,16 +296,26 @@ func (g *Grove) RebuildChildCache() error {
 		return fmt.Errorf("failed getting all nodes from grove: %w", err)
 	}
 	for _, node := range nodes {
-		g.ChildCache.Add(node.ParentID(), node.ID())
+		g.CacheChildInfo(node)
 	}
 	return nil
+}
+
+// CacheChildInfo updates the child cache information for the given node.
+func (g *Grove) CacheChildInfo(node forest.Node) {
+	// ensure we cache this node's relationship to its parent
+	g.ChildCache.Add(node.ParentID(), node.ID())
+	// ensure we cache this node's existence (if it turns out that we
+	// never see a child for this node, the cache will still generate a
+	// hit for 0 children)
+	g.ChildCache.Add(node.ID())
 }
 
 // Add inserts the node into the grove. If the given node is already in the
 // grove, Add will do nothing. It is not an error to insert a node more than
 // once.
 func (g *Grove) Add(node forest.Node) error {
-	g.ChildCache.Add(node.ParentID(), node.ID())
+	g.CacheChildInfo(node)
 	if _, alreadyPresent, err := g.Get(node.ID()); err != nil {
 		return fmt.Errorf("failed checking whether node already in grove: %w", err)
 	} else if alreadyPresent {

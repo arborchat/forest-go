@@ -65,3 +65,16 @@ func TestChildCacheAddDuplicate(t *testing.T) {
 		t.Fatalf("expected %d results, got %d", 1, len(results))
 	}
 }
+
+func TestChildCacheAddNoChildren(t *testing.T) {
+	parent := testutil.RandomQualifiedHash()
+	cache := grove.NewChildCache()
+	cache.Add(parent)
+	children, hit := cache.Get(parent)
+	if !hit {
+		t.Fatalf("should have generated a hit for parent even with no children")
+	}
+	if len(children) > 0 {
+		t.Fatalf("parent with no children should return len 0, got %d", len(children))
+	}
+}
