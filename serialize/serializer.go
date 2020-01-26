@@ -251,7 +251,11 @@ func ArborDeserialize(value reflect.Value, data []byte) (unused []byte, err erro
 		if err != nil {
 			return nil, err
 		}
-		data = data[unmarshaler.BytesConsumed():]
+		bytesConsumed := unmarshaler.BytesConsumed()
+		if bytesConsumed > len(data) {
+			return nil, fmt.Errorf("field %v.BytesConsumed() returned %d, but only %d bytes in slice", field.value, bytesConsumed, len(data))
+		}
+		data = data[bytesConsumed:]
 	}
 	return data, nil
 }
