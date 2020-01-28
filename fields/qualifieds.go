@@ -5,8 +5,10 @@ import (
 	"encoding"
 	"fmt"
 	"reflect"
+	"unicode/utf8"
 
 	"git.sr.ht/~whereswaldon/forest-go/serialize"
+	"git.sr.ht/~whereswaldon/forest-go/twig"
 	"golang.org/x/crypto/openpgp"
 	"golang.org/x/crypto/openpgp/packet"
 )
@@ -162,6 +164,16 @@ func (q *QualifiedContent) Validate() error {
 	if int(q.Descriptor.Length) != len(q.Blob) {
 		return fmt.Errorf("Descriptor length %d does not match value length %d", q.Descriptor.Length, len(q.Blob))
 	}
+	switch q.Descriptor.Type {
+	case ContentTypeUTF8String:
+		if !utf8.Valid(q.Blob) {
+			fmt.Errorf("invalid utf8 data in qualified content of type utf8")
+		}
+	case ContentTypeTwig:
+		if err := twig.New().UnmarshalBinary(q.Blob); err != nil {
+			return fmt.Errorf("invalid twig data in qualified content of type twig: %w", err)
+		}
+	}
 	return nil
 }
 
@@ -207,6 +219,18 @@ func (q *QualifiedKey) Validate() error {
 	}
 	if int(q.Descriptor.Length) != len(q.Blob) {
 		return fmt.Errorf("Descriptor length %d does not match value length %d", q.Descriptor.Length, len(q.Blob))
+	}
+	switch q.Descriptor.Type {
+	case KeyTypeNoKey:
+		return nil
+	case KeyTypeOpenPGPRSA:
+		entity, err := q.AsEntity()
+		if err != nil {
+			return fmt.Errorf("unable to convert qualified key to openpgp key: %w", err)
+		}
+		if entity.PrimaryKey.PubKeyAlgo != packet.PubKeyAlgoRSA {
+			return fmt.Errorf("expected RSA key, but was %v", entity.PrimaryKey.PubKeyAlgo)
+		}
 	}
 	return nil
 }

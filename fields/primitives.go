@@ -409,19 +409,19 @@ func (t *ContentType) Equals(t2 *ContentType) bool {
 type KeyType genericType
 
 const (
-	sizeofKeyType          = sizeofgenericType
-	KeyTypeNoKey   KeyType = 0
-	KeyTypeOpenPGP KeyType = 1
+	sizeofKeyType             = sizeofgenericType
+	KeyTypeNoKey      KeyType = 0
+	KeyTypeOpenPGPRSA KeyType = 1
 )
 
 var ValidKeyTypes = map[KeyType]struct{}{
-	KeyTypeNoKey:   struct{}{},
-	KeyTypeOpenPGP: struct{}{},
+	KeyTypeNoKey:      struct{}{},
+	KeyTypeOpenPGPRSA: struct{}{},
 }
 
 var KeyNames = map[KeyType]string{
-	KeyTypeNoKey:   "None",
-	KeyTypeOpenPGP: "OpenPGP",
+	KeyTypeNoKey:      "None",
+	KeyTypeOpenPGPRSA: "OpenPGP-RSA",
 }
 
 func (t KeyType) MarshalBinary() ([]byte, error) {

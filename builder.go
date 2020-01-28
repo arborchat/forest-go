@@ -179,7 +179,7 @@ func NewIdentityQualified(signer Signer, name *fields.QualifiedContent, metadata
 	if err != nil {
 		return nil, err
 	}
-	qKey, err := fields.NewQualifiedKey(fields.KeyTypeOpenPGP, pubkey)
+	qKey, err := fields.NewQualifiedKey(fields.KeyTypeOpenPGPRSA, pubkey)
 	if err != nil {
 		return nil, err
 	}
