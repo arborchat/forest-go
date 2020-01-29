@@ -287,5 +287,28 @@ func (q *QualifiedSignature) Validate() error {
 	if int(q.Descriptor.Length) != len(q.Blob) {
 		return fmt.Errorf("Descriptor length %d does not match value length %d", q.Descriptor.Length, len(q.Blob))
 	}
+	switch q.Descriptor.Type {
+	case SignatureTypeOpenPGPRSA:
+		reader := packet.NewReader(bytes.NewBuffer(q.Blob))
+		p, err := reader.Next()
+		if err != nil {
+			return fmt.Errorf("failed reading signature data as openpgp packet: %w", err)
+		}
+		var algorithm packet.PublicKeyAlgorithm
+		switch concrete := p.(type) {
+		case *packet.Signature:
+			algorithm = concrete.PubKeyAlgo
+		case *packet.SignatureV3:
+			algorithm = concrete.PubKeyAlgo
+		default:
+			return fmt.Errorf("signature packet did not contain signature, had %T instead", concrete)
+		}
+		if algorithm != packet.PubKeyAlgoRSA {
+			return fmt.Errorf("RSA-type signature made with non-RSA algorithm: %v", algorithm)
+		}
+
+	default:
+		return fmt.Errorf("unknown signature type %d", q.Descriptor.Type)
+	}
 	return nil
 }

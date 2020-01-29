@@ -2,9 +2,11 @@ package fields_test
 
 import (
 	"bytes"
+	"crypto"
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/sha256"
 	"testing"
 	"time"
 
@@ -109,19 +111,27 @@ func TestQualifiedContent(t *testing.T) {
 				t.Fatalf("should have errored")
 			} else if err == nil && row.ShouldError {
 				t.Fatalf("should not have errored")
+			} else if err != nil {
+				t.Logf("Recieved expected error: %v", err)
 			}
 		})
 	}
 }
+
+func newECDSAKey() *packet.PrivateKey {
+	ecdsaKey, _ := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+	pgpEcdsaKey := packet.NewECDSAPrivateKey(time.Now(), ecdsaKey)
+	return pgpEcdsaKey
+}
+
 func TestQualifiedKey(t *testing.T) {
 	rsaKey, _ := openpgp.NewEntity("testkey", "", "", nil)
 	buf := new(bytes.Buffer)
 	rsaKey.Serialize(buf)
 	rsaKeyBytes := buf.Bytes()
-	ecdsaKey, _ := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
-	pgpEcdsaKey := packet.NewECDSAPublicKey(time.Now(), &ecdsaKey.PublicKey)
+	pgpEcdsaKey := newECDSAKey()
 	buf2 := new(bytes.Buffer)
-	pgpEcdsaKey.Serialize(buf2)
+	pgpEcdsaKey.PublicKey.Serialize(buf2)
 	pgpEcdsaKeyBytes := buf2.Bytes()
 	inputs := []struct {
 		Content     fields.QualifiedKey
@@ -158,6 +168,82 @@ func TestQualifiedKey(t *testing.T) {
 				t.Fatalf("should have errored")
 			} else if err == nil && row.ShouldError {
 				t.Fatalf("should not have errored")
+			} else if err != nil {
+				t.Logf("Recieved expected error: %v", err)
+			}
+
+		})
+	}
+}
+
+func TestQualifiedSignature(t *testing.T) {
+	signingData := "I should be signed"
+	// make an RSA signature to test with
+	rsaKey, _ := openpgp.NewEntity("testkey", "", "", nil)
+	privRSAKey := rsaKey.PrivateKey
+	rsaSignature := new(packet.Signature)
+	rsaSignature.Hash = crypto.SHA256
+	rsaSignature.PubKeyAlgo = packet.PubKeyAlgoRSA
+	rsaHash := sha256.New()
+	rsaHash.Write([]byte(signingData))
+	if err := rsaSignature.Sign(rsaHash, privRSAKey, nil); err != nil {
+		t.Fatalf("failed to sign RSA test data: %v", err)
+	}
+	rsaBuf := new(bytes.Buffer)
+	rsaSignature.Serialize(rsaBuf)
+	rsaSignatureBytes := rsaBuf.Bytes()
+
+	// make an ECDSA signature to test with
+	ecdsaKey := newECDSAKey()
+	ecdsaSignature := new(packet.Signature)
+	ecdsaSignature.Hash = crypto.SHA256
+	ecdsaSignature.PubKeyAlgo = packet.PubKeyAlgoECDSA
+	hash := sha256.New()
+	hash.Write([]byte(signingData))
+	if err := ecdsaSignature.Sign(hash, ecdsaKey, nil); err != nil {
+		t.Fatalf("Failed to ECDSA sign test data: %v", err)
+	}
+	buf := new(bytes.Buffer)
+	ecdsaSignature.Serialize(buf)
+	ecdsaSignatureBytes := buf.Bytes()
+
+	inputs := []struct {
+		Content     fields.QualifiedSignature
+		Name        string
+		ShouldError bool
+	}{
+		{
+			Content: fields.QualifiedSignature{
+				Descriptor: fields.SignatureDescriptor{
+					Type:   fields.SignatureTypeOpenPGPRSA,
+					Length: fields.ContentLength(len(ecdsaSignatureBytes)),
+				},
+				Blob: ecdsaSignatureBytes,
+			},
+			Name:        "invalid openpgp RSA sig (is ECDSA sig)",
+			ShouldError: true,
+		},
+		{
+			Content: fields.QualifiedSignature{
+				Descriptor: fields.SignatureDescriptor{
+					Type:   fields.SignatureTypeOpenPGPRSA,
+					Length: fields.ContentLength(len(rsaSignatureBytes)),
+				},
+				Blob: rsaSignatureBytes,
+			},
+			Name:        "valid openpgp RSA sig",
+			ShouldError: false,
+		},
+	}
+
+	for _, row := range inputs {
+		t.Run(row.Name, func(t *testing.T) {
+			if err := row.Content.Validate(); err != nil && !row.ShouldError {
+				t.Fatalf("should have errored")
+			} else if err == nil && row.ShouldError {
+				t.Fatalf("should not have errored")
+			} else {
+				t.Logf("Received expected error: %v", err)
 			}
 		})
 	}

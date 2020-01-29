@@ -453,16 +453,16 @@ func (t *KeyType) Equals(t2 *KeyType) bool {
 type SignatureType genericType
 
 const (
-	sizeofSignatureType                = sizeofgenericType
-	SignatureTypeOpenPGP SignatureType = 1
+	sizeofSignatureType                   = sizeofgenericType
+	SignatureTypeOpenPGPRSA SignatureType = 1
 )
 
 var ValidSignatureTypes = map[SignatureType]struct{}{
-	SignatureTypeOpenPGP: struct{}{},
+	SignatureTypeOpenPGPRSA: struct{}{},
 }
 
 var SignatureNames = map[SignatureType]string{
-	SignatureTypeOpenPGP: "OpenPGP",
+	SignatureTypeOpenPGPRSA: "OpenPGP-RSA",
 }
 
 func (t SignatureType) MarshalBinary() ([]byte, error) {
