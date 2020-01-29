@@ -201,7 +201,7 @@ func NewIdentityQualified(signer Signer, name *fields.QualifiedContent, metadata
 		return nil, err
 	}
 
-	qs, err := fields.NewQualifiedSignature(fields.SignatureTypeOpenPGP, signature)
+	qs, err := fields.NewQualifiedSignature(fields.SignatureTypeOpenPGPRSA, signature)
 	if err != nil {
 		return nil, err
 	}
@@ -277,7 +277,7 @@ func (n *Builder) NewCommunityQualified(name *fields.QualifiedContent, metadata 
 	if err != nil {
 		return nil, err
 	}
-	qs, err := fields.NewQualifiedSignature(fields.SignatureTypeOpenPGP, signature)
+	qs, err := fields.NewQualifiedSignature(fields.SignatureTypeOpenPGPRSA, signature)
 	if err != nil {
 		return nil, err
 	}
@@ -349,7 +349,7 @@ func (n *Builder) NewReplyQualified(parent interface{}, content, metadata *field
 	if err != nil {
 		return nil, err
 	}
-	qs, err := fields.NewQualifiedSignature(fields.SignatureTypeOpenPGP, signature)
+	qs, err := fields.NewQualifiedSignature(fields.SignatureTypeOpenPGPRSA, signature)
 	if err != nil {
 		return nil, err
 	}
