@@ -103,14 +103,25 @@ func TestQualifiedContent(t *testing.T) {
 			Name:        "invalid twig",
 			ShouldError: true,
 		},
+		{
+			Content: fields.QualifiedContent{
+				Descriptor: fields.ContentDescriptor{
+					Type:   fields.ContentTypeTwig,
+					Length: fields.ContentLength(0),
+				},
+				Blob: []byte{},
+			},
+			Name:        "valid empty twig",
+			ShouldError: false,
+		},
 	}
 
 	for _, row := range inputs {
 		t.Run(row.Name, func(t *testing.T) {
 			if err := row.Content.Validate(); err != nil && !row.ShouldError {
-				t.Fatalf("should have errored")
+				t.Fatalf("should not have errored: %v", err)
 			} else if err == nil && row.ShouldError {
-				t.Fatalf("should not have errored")
+				t.Fatalf("should have errored: %v", err)
 			} else if err != nil {
 				t.Logf("Recieved expected error: %v", err)
 			}

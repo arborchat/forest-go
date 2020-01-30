@@ -82,6 +82,9 @@ func New() *Data {
 
 // UnmarshalBinary populates a Data from raw binary in Twig format
 func (d *Data) UnmarshalBinary(b []byte) error {
+	if len(b) == 0 {
+		return nil
+	}
 	components := bytes.Split(b, []byte{0})
 	if len(components)%2 != 0 {
 		return fmt.Errorf("key with no value")
