@@ -183,9 +183,9 @@ func (v *Blob) Equals(v2 *Blob) bool {
 
 // Version represents the version of the Arbor Forest Schema used to construct
 // a particular node
-type Version uint64
+type Version uint16
 
-const sizeofVersion = 8
+const sizeofVersion = 2
 
 // MarshalBinary converts the Version into its binary representation
 func (v Version) MarshalBinary() ([]byte, error) {
