@@ -1,15 +1,16 @@
-package forest_test
+package store_test
 
 import (
 	"testing"
 
 	forest "git.sr.ht/~whereswaldon/forest-go"
 	"git.sr.ht/~whereswaldon/forest-go/fields"
+	"git.sr.ht/~whereswaldon/forest-go/store"
 	"git.sr.ht/~whereswaldon/forest-go/testutil"
 )
 
 func TestMemoryStore(t *testing.T) {
-	s := forest.NewMemoryStore()
+	s := store.NewMemoryStore()
 	testStandardStoreInterface(t, s, "MemoryStore")
 }
 
@@ -154,9 +155,9 @@ func containsID(ids []*fields.QualifiedHash, id *fields.QualifiedHash) bool {
 }
 
 func TestCacheStore(t *testing.T) {
-	s1 := forest.NewMemoryStore()
-	s2 := forest.NewMemoryStore()
-	c, err := forest.NewCacheStore(s1, s2)
+	s1 := store.NewMemoryStore()
+	s2 := store.NewMemoryStore()
+	c, err := store.NewCacheStore(s1, s2)
 	if err != nil {
 		t.Errorf("Unexpected error constructing CacheStore: %v", err)
 	}
@@ -164,7 +165,7 @@ func TestCacheStore(t *testing.T) {
 }
 
 func TestCacheStoreDownPropagation(t *testing.T) {
-	s1 := forest.NewMemoryStore()
+	s1 := store.NewMemoryStore()
 	id, _, com, rep := testutil.MakeReplyOrSkip(t)
 	nodes := []forest.Node{id, com, rep}
 	subrange := nodes[:len(nodes)-1]
@@ -173,8 +174,8 @@ func TestCacheStoreDownPropagation(t *testing.T) {
 			t.Skipf("Failed adding %v to %v", node, s1)
 		}
 	}
-	s2 := forest.NewMemoryStore()
-	if _, err := forest.NewCacheStore(s1, s2); err != nil {
+	s2 := store.NewMemoryStore()
+	if _, err := store.NewCacheStore(s1, s2); err != nil {
 		t.Errorf("Unexpected error when constructing CacheStore: %v", err)
 	}
 
@@ -190,7 +191,7 @@ func TestCacheStoreDownPropagation(t *testing.T) {
 }
 
 func TestCacheStoreUpPropagation(t *testing.T) {
-	base := forest.NewMemoryStore()
+	base := store.NewMemoryStore()
 	id, _, com, rep := testutil.MakeReplyOrSkip(t)
 	nodes := []forest.Node{id, com, rep}
 	subrange := nodes[:len(nodes)-1]
@@ -199,8 +200,8 @@ func TestCacheStoreUpPropagation(t *testing.T) {
 			t.Skipf("Failed adding %v to %v", node, base)
 		}
 	}
-	cache := forest.NewMemoryStore()
-	combined, err := forest.NewCacheStore(cache, base)
+	cache := store.NewMemoryStore()
+	combined, err := store.NewCacheStore(cache, base)
 	if err != nil {
 		t.Errorf("Unexpected error when constructing CacheStore: %v", err)
 	}

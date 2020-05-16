@@ -20,6 +20,7 @@ import (
 
 	"git.sr.ht/~whereswaldon/forest-go"
 	"git.sr.ht/~whereswaldon/forest-go/fields"
+	"git.sr.ht/~whereswaldon/forest-go/store"
 )
 
 // File represents a type that supports file-like operations. *os.File
@@ -79,7 +80,7 @@ func (r RelativeFS) OpenFile(path string, flag int, perm os.FileMode) (File, err
 // event of a disk modification is to call RebuildChildCache().
 type Grove struct {
 	FS
-	NodeCache *forest.MemoryStore
+	NodeCache *store.MemoryStore
 	*ChildCache
 }
 
@@ -97,7 +98,7 @@ func NewWithFS(fs FS) (*Grove, error) {
 	}
 	return &Grove{
 		FS:         fs,
-		NodeCache:  forest.NewMemoryStore(),
+		NodeCache:  store.NewMemoryStore(),
 		ChildCache: NewChildCache(),
 	}, nil
 }
