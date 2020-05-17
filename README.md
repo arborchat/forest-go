@@ -10,6 +10,11 @@ This repo contains:
 
 For information about each component of this repo, see later in this file.
 
+> NOTE: this package requires using a fork of golang.org/x/crypto, and you must therefore include the following in your `go.mod`:
+> ```
+>     replace golang.org/x/crypto => github.com/ProtonMail/crypto <version-from-forest-go's-go.mod>
+> ```
+
 ## About Arbor
 
 ![arbor logo](https://git.sr.ht/~whereswaldon/forest-go/blob/master/img/arbor-logo.png)

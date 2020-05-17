@@ -3,6 +3,10 @@ Package forest is a library for creating nodes in the Arbor Forest data structur
 
 The specification for the Arbor Forest can be found here: https://github.com/arborchat/protocol/blob/forest/spec/Forest.md
 
+NOTE: this package requires using a fork of golang.org/x/crypto, and you must therefore include the following in your go.mod:
+
+    replace golang.org/x/crypto => github.com/ProtonMail/crypto <version-from-forest-go's-go.mod>
+
 All nodes in the Arbor Forest are cryptographically signed by an Identity
 node. Identity nodes sign themselves. To create a new identity, first create or load an OpenPGP private key using golang.org/x/crypto/openpgp. Then you can use that key and name to create an identity.
 
