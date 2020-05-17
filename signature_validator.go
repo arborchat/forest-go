@@ -45,7 +45,7 @@ func ValidateSignature(v SignatureValidator, identity *Identity) (bool, error) {
 
 	signatureBuf := bytes.NewBuffer([]byte(v.GetSignature().Blob))
 	keyring := openpgp.EntityList([]*openpgp.Entity{pubkeyEntity})
-	_, err = openpgp.CheckDetachedSignature(keyring, signedContentBuf, signatureBuf)
+	_, err = openpgp.CheckDetachedSignature(keyring, signedContentBuf, signatureBuf, nil)
 	if err != nil {
 		return false, err
 	}
