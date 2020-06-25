@@ -177,20 +177,21 @@ func (m *Archive) Recent(nodeType fields.NodeType, quantity int) (nodes []forest
 // Add inserts a node into the underlying store. Importantly, this will send a notification
 // of a new node to *all* subscribers. If the calling code is a subscriber, it will still
 // be notified of the new node. To supress this, use AddAs() instead.
+//
+// Subscribers will only be notified if the node is not already present in the archive.
 func (m *Archive) Add(node forest.Node) (err error) {
-	m.executeAsync(func() {
-		m.notifySubscribed(m.preAddSubscribers, node, neverAssigned)
-		if err = m.store.Add(node); err == nil {
-			m.notifySubscribed(m.postAddSubscribers, node, neverAssigned)
-		}
-	})
-	return
+	return m.AddAs(node, neverAssigned)
 }
 
 // AddAs allows adding a node to the underlying store without being notified
 // of it as a new node. The addedByID (subscription id returned from SubscribeToNewMessages)
 // will not be notified of the new nodes, but all other subscribers will be.
+//
+// Subscribers will only be notified if the node is not already present in the archive.
 func (m *Archive) AddAs(node forest.Node, addedByID Subscription) (err error) {
+	if _, has, _ := m.Get(node.ID()); has {
+		return
+	}
 	m.executeAsync(func() {
 		m.notifySubscribed(m.preAddSubscribers, node, addedByID)
 		if err = m.store.Add(node); err == nil {
