@@ -8,8 +8,6 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"strconv"
-	"strings"
 
 	forest "git.sr.ht/~whereswaldon/forest-go"
 	"git.sr.ht/~whereswaldon/forest-go/fields"
@@ -125,14 +123,12 @@ func decodeMetadata(input string) ([]byte, error) {
 	var twigData = twig.New()
 
 	for k, d := range metadata {
-		key := strings.Split(k, "/")
-		n := key[0]
-		v, err := strconv.Atoi(key[1])
+		key, err := twig.FromString(k)
 		if err != nil {
-			return nil, fmt.Errorf("Error converting version to int: %w", err)
+			return nil, fmt.Errorf("Error parsing twig key: %w", err)
 		}
 
-		_, err = twigData.Set(n, uint(v), []byte(d))
+		twigData.Values[key] = []byte(d)
 		if err != nil {
 			return nil, fmt.Errorf("Error adding twig data: %v", err)
 		}
