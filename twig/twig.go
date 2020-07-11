@@ -80,6 +80,25 @@ func New() *Data {
 	return &Data{Values: make(map[Key][]byte)}
 }
 
+// Set sets a twig key-version data entry. If the entry does not exist, it is created
+func (d *Data) Set(name string, version uint, value []byte) (*Data, error) {
+	d.Values[Key{Name: name, Version: version}] = value
+	return d, nil
+}
+
+// Get fetches a value from the value store by key name and version, and whether or
+// not the key was in the values
+func (d *Data) Get(name string, version uint) ([]byte, bool) {
+	data, inValues := d.Values[Key{Name: name, Version: version}]
+	return data, inValues
+}
+
+// Contains checks whether or not a key exists in the data values by name and version
+func (d *Data) Contains(name string, version uint) bool {
+	_, inValues := d.Get(name, version)
+	return inValues
+}
+
 // UnmarshalBinary populates a Data from raw binary in Twig format
 func (d *Data) UnmarshalBinary(b []byte) error {
 	if len(b) == 0 {
@@ -101,6 +120,9 @@ func (d *Data) UnmarshalBinary(b []byte) error {
 
 // MarshalBinary converts this Data into twig binary form.
 func (d *Data) MarshalBinary() ([]byte, error) {
+	if len(d.Values) == 0 {
+		return []byte{}, nil
+	}
 	buf := new(bytes.Buffer)
 	for key, value := range d.Values {
 		// gotta check here because the Values map is exported and could be

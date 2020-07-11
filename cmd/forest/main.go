@@ -8,9 +8,12 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strconv"
+	"strings"
 
 	forest "git.sr.ht/~whereswaldon/forest-go"
 	"git.sr.ht/~whereswaldon/forest-go/fields"
+	"git.sr.ht/~whereswaldon/forest-go/twig"
 	"golang.org/x/crypto/openpgp"
 	"golang.org/x/crypto/openpgp/packet"
 )
@@ -106,37 +109,82 @@ func create(args []string) error {
 	return nil
 }
 
+type Metadata struct {
+	Version uint   `json:"version" `
+	Data    string `json:"data" `
+}
+
+func decodeMetadata(input string) ([]byte, error) {
+
+	var metadata map[string]string
+	err := json.Unmarshal([]byte(input), &metadata)
+	if err != nil {
+		return nil, fmt.Errorf("Error unmarshalling metadata: %v", err)
+	}
+
+	var twigData = twig.New()
+
+	for k, d := range metadata {
+		key := strings.Split(k, "/")
+		n := key[0]
+		v, err := strconv.Atoi(key[1])
+		if err != nil {
+			return nil, fmt.Errorf("Error converting version to int: %w", err)
+		}
+
+		_, err = twigData.Set(n, uint(v), []byte(d))
+		if err != nil {
+			return nil, fmt.Errorf("Error adding twig data: %v", err)
+		}
+	}
+
+	mdBlob, err := twigData.MarshalBinary()
+	if err != nil {
+		return nil, fmt.Errorf("Error marshalling data to binary: %v", err)
+	}
+
+	return mdBlob, nil
+}
+
 func createIdentity(args []string) error {
 	var (
-		name, keyfile, gpguser string
+		name, keyfile, gpguser, metadata string
 	)
 	flags := flag.NewFlagSet(commandCreate+" "+commandIdentity, flag.ExitOnError)
 	flags.StringVar(&name, "name", "forest", "username for the identity node")
 	flags.StringVar(&keyfile, "key", "arbor.privkey", "the openpgp private key for the identity node")
 	flags.StringVar(&gpguser, "gpguser", "", "gpg2 user whose private key should be used to create this node. Supercedes -key.")
+	flags.StringVar(&metadata, "metadata", "{}", "Twig metadata fields for the node: {\"<key>/<version>\": \"data\",...}")
+
 	usage := func() {
 		flags.PrintDefaults()
 	}
 	if err := flags.Parse(args); err != nil {
 		usage()
-		return err
+		return fmt.Errorf("Error parsing arguments: %v", err)
 	}
 	signer, err := getSigner(gpguser, keyfile)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error getting signer: %v", err)
 	}
-	identity, err := forest.NewIdentity(signer, name, []byte{})
+
+	metadataRaw, err := decodeMetadata(metadata)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error decoding metadata: %v", err)
+	}
+
+	identity, err := forest.NewIdentity(signer, name, metadataRaw)
+	if err != nil {
+		return fmt.Errorf("Error creating identity: %v", err)
 	}
 
 	fname, err := identity.ID().MarshalString()
 	if err != nil {
-		return err
+		return fmt.Errorf("Error marshalling identity: %v", err)
 	}
 
 	if err := saveAs(fname, identity); err != nil {
-		return err
+		return fmt.Errorf("Error saving identity: %v", err)
 	}
 
 	fmt.Println(fname)
@@ -146,41 +194,46 @@ func createIdentity(args []string) error {
 
 func createCommunity(args []string) error {
 	var (
-		name, keyfile, identity, gpguser string
+		name, keyfile, identity, gpguser, metadata string
 	)
 	flags := flag.NewFlagSet(commandCreate+" "+commandCommunity, flag.ExitOnError)
 	flags.StringVar(&name, "name", "forest", "username for the community node")
 	flags.StringVar(&keyfile, "key", "arbor.privkey", "the openpgp private key for the signing identity node")
 	flags.StringVar(&identity, "as", "", "[required] the id of the signing identity node")
 	flags.StringVar(&gpguser, "gpguser", "", "gpg2 user whose private key should be used to create this node. Supercedes -key.")
+	flags.StringVar(&metadata, "metadata", "{}", "Twig metadata fields for the node: {\"<key>/<version>\": \"data\",...}")
 	usage := func() {
 		flags.PrintDefaults()
 	}
 	if err := flags.Parse(args); err != nil {
 		usage()
-		return err
+		return fmt.Errorf("Error parsing arguments: %v", err)
 	}
 	signer, err := getSigner(gpguser, keyfile)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error getting signer: %v", err)
 	}
 	idNode, err := getIdentity(identity)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error gettig identity: %v", err)
+	}
+	metadataRaw, err := decodeMetadata(metadata)
+	if err != nil {
+		return fmt.Errorf("Error decoding metadata: %v", err)
 	}
 
-	community, err := forest.As(idNode, signer).NewCommunity(name, []byte{})
+	community, err := forest.As(idNode, signer).NewCommunity(name, metadataRaw)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating community: %v", err)
 	}
 
 	fname, err := community.ID().MarshalString()
 	if err != nil {
-		return err
+		return fmt.Errorf("Error marshalling community: %v", err)
 	}
 
 	if err := saveAs(fname, community); err != nil {
-		return err
+		return fmt.Errorf("Error saving community: %v", err)
 	}
 
 	fmt.Println(fname)
@@ -190,7 +243,7 @@ func createCommunity(args []string) error {
 
 func createReply(args []string) error {
 	var (
-		content, parent, keyfile, identity, gpguser string
+		content, parent, keyfile, identity, gpguser, metadata string
 	)
 	flags := flag.NewFlagSet(commandCreate+" "+commandReply, flag.ExitOnError)
 	flags.StringVar(&keyfile, "key", "arbor.privkey", "the openpgp private key for the signing identity node")
@@ -198,6 +251,7 @@ func createReply(args []string) error {
 	flags.StringVar(&identity, "as", "", "[required] the id of the signing identity node")
 	flags.StringVar(&parent, "to", "", "[required] the id of the parent reply or community node")
 	flags.StringVar(&content, "content", "", "[required] content of the reply node")
+	flags.StringVar(&metadata, "metadata", "{}", "Twig metadata fields for the node: {\"<key>/<version>\": \"data\",...}")
 
 	usage := func() {
 		flags.PrintDefaults()
@@ -209,30 +263,35 @@ func createReply(args []string) error {
 
 	signer, err := getSigner(gpguser, keyfile)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error getting signer: %v", err)
 	}
 	idNode, err := getIdentity(identity)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error getting Identity: %v", err)
 	}
 
 	parentNode, err := getReplyOrCommunity(parent)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error getting Reply/Community: %v", err)
 	}
 
-	reply, err := forest.As(idNode, signer).NewReply(parentNode, content, []byte{})
+	metadataRaw, err := decodeMetadata(metadata)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error decoding metadata: %v", err)
+	}
+
+	reply, err := forest.As(idNode, signer).NewReply(parentNode, content, metadataRaw)
+	if err != nil {
+		return fmt.Errorf("Error during creating new reply: %v", err)
 	}
 
 	fname, err := reply.ID().MarshalString()
 	if err != nil {
-		return err
+		return fmt.Errorf("Error marshalling reply.ID: %v", err)
 	}
 
 	if err := saveAs(fname, reply); err != nil {
-		return err
+		return fmt.Errorf("Error saving reply: %v", err)
 	}
 
 	fmt.Println(fname)

@@ -80,3 +80,13 @@ func TestDataMarshalBadKey(t *testing.T) {
 		t.Fatalf("Should have returned nil slice when failing to marshal")
 	}
 }
+
+func TestDataMarshalNoBytes(t *testing.T) {
+	data := twig.New()
+	asBin, err := data.MarshalBinary()
+	if err != nil {
+		t.Fatalf("Should not error on marshallign empty twig store: %v", nil)
+	} else if len(asBin) != 0 {
+		t.Fatalf("Empty data store should return an empty.")
+	}
+}

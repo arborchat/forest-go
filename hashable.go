@@ -55,7 +55,7 @@ func ValidateID(h Hashable, expected fields.QualifiedHash) (bool, error) {
 	}
 	computedID := fields.QualifiedHash{
 		Descriptor: *h.HashDescriptor(),
-		Blob:      fields.Blob(id),
+		Blob:       fields.Blob(id),
 	}
 	return expected.Equals(&computedID), nil
 }
