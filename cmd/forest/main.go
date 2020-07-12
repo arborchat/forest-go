@@ -129,9 +129,6 @@ func decodeMetadata(input string) ([]byte, error) {
 		}
 
 		twigData.Values[key] = []byte(d)
-		if err != nil {
-			return nil, fmt.Errorf("Error adding twig data: %v", err)
-		}
 	}
 
 	mdBlob, err := twigData.MarshalBinary()
