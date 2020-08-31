@@ -23,6 +23,8 @@ type Node interface {
 	TreeDepth() fields.TreeDepth
 	ValidateShallow() error
 	ValidateDeep(Store) error
+	AuthorID() *fields.QualifiedHash
+	TwigMetadata() (*twig.Data, error)
 	encoding.BinaryMarshaler
 	encoding.BinaryUnmarshaler
 }
@@ -103,6 +105,12 @@ func (n *CommonNode) SignatureIdentityHash() *fields.QualifiedHash {
 	return &n.Author
 }
 
+// AuthorID returns the Author of a common node. It wraps SignatureIdentityHash to satisfy
+// the Node interface.
+func (n *CommonNode) AuthorID() *fields.QualifiedHash {
+	return n.SignatureIdentityHash()
+}
+
 func (n CommonNode) IsIdentity() bool {
 	return n.Type == fields.NodeTypeIdentity
 }
@@ -129,7 +137,8 @@ func (n *CommonNode) Equals(n2 *CommonNode) bool {
 }
 
 // ValidateShallow checks all fields for internal validity. It does not check
-// the existence or validity of nodes referenced from this node.
+// the existence or validity of nodes referenced from this node. If the node
+// validates, ValidateShallow returns `nil`.
 func (n *CommonNode) ValidateShallow() error {
 	if _, validType := fields.ValidNodeTypes[n.Type]; !validType {
 		return fmt.Errorf("%d is not a valid node type", n.Type)
@@ -146,6 +155,9 @@ func (n *CommonNode) ValidateShallow() error {
 	}
 	if n.Metadata.Descriptor.Type != fields.ContentTypeTwig {
 		return fmt.Errorf("Metadata must be twig, got content type %d", n.Metadata.Descriptor.Type)
+	}
+	if _, err := n.TwigMetadata(); err != nil {
+		return fmt.Errorf("Twig metadata failed to validate: %v", err)
 	}
 	return nil
 }
