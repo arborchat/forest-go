@@ -11,6 +11,7 @@ import (
 	"git.sr.ht/~whereswaldon/forest-go/fields"
 	"git.sr.ht/~whereswaldon/forest-go/grove"
 	"git.sr.ht/~whereswaldon/forest-go/testkeys"
+	"git.sr.ht/~whereswaldon/forest-go/twig"
 )
 
 type truncatableFile interface {
@@ -555,12 +556,20 @@ func (e errNode) UnmarshalBinary([]byte) error {
 	return e.error
 }
 
+func (e errNode) TwigMetadata() (*twig.Data, error) {
+	return twig.New(), nil
+}
+
 func (e errNode) ValidateDeep(forest.Store) error {
 	return e.error
 }
 
 func (e errNode) ValidateShallow() error {
 	return e.error
+}
+
+func (e errNode) AuthorID() *fields.QualifiedHash {
+	return &fields.QualifiedHash{}
 }
 
 func TestGroveAddFailToSerialize(t *testing.T) {
