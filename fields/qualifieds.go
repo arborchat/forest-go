@@ -65,6 +65,9 @@ func (q *QualifiedHash) UnmarshalBinary(b []byte) error {
 	if err != nil {
 		return err
 	}
+	if int(q.Descriptor.Length) > len(unused) {
+		return fmt.Errorf("malformed qualified hash, length %d is longer than remaining bytes (%d)", q.Descriptor.Length, len(unused))
+	}
 	return q.Blob.UnmarshalBinary(unused[:q.Descriptor.Length])
 }
 
@@ -129,6 +132,9 @@ func (q *QualifiedContent) UnmarshalBinary(b []byte) error {
 	unused, err := serialize.ArborDeserialize(reflect.ValueOf(&q.Descriptor), b)
 	if err != nil {
 		return err
+	}
+	if int(q.Descriptor.Length) > len(unused) {
+		return fmt.Errorf("malformed qualified content, length %d is longer than remaining bytes (%d)", q.Descriptor.Length, len(unused))
 	}
 	return q.Blob.UnmarshalBinary(unused[:q.Descriptor.Length])
 }
@@ -202,6 +208,9 @@ func (q *QualifiedKey) UnmarshalBinary(b []byte) error {
 	if err != nil {
 		return err
 	}
+	if int(q.Descriptor.Length) > len(unused) {
+		return fmt.Errorf("malformed qualified key, length %d is longer than remaining bytes (%d)", q.Descriptor.Length, len(unused))
+	}
 	return q.Blob.UnmarshalBinary(unused[:q.Descriptor.Length])
 }
 
@@ -268,6 +277,9 @@ func (q *QualifiedSignature) UnmarshalBinary(b []byte) error {
 	unused, err := serialize.ArborDeserialize(reflect.ValueOf(&q.Descriptor), b)
 	if err != nil {
 		return err
+	}
+	if int(q.Descriptor.Length) > len(unused) {
+		return fmt.Errorf("malformed qualified signature, length %d is longer than remaining bytes (%d)", q.Descriptor.Length, len(unused))
 	}
 	return q.Blob.UnmarshalBinary(unused[:q.Descriptor.Length])
 }
