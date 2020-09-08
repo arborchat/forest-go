@@ -7,10 +7,13 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
+	"encoding"
+	"reflect"
 	"testing"
 	"time"
 
 	"git.sr.ht/~whereswaldon/forest-go/fields"
+	"git.sr.ht/~whereswaldon/forest-go/serialize"
 	"git.sr.ht/~whereswaldon/forest-go/twig"
 	"golang.org/x/crypto/openpgp"
 	"golang.org/x/crypto/openpgp/packet"
@@ -184,6 +187,72 @@ func TestQualifiedKey(t *testing.T) {
 			}
 
 		})
+	}
+}
+
+func TestQualifiedBounds(t *testing.T) {
+	data := make([]byte, 10)
+	length := fields.ContentLength(len(data))
+	hQual := fields.QualifiedHash{
+		Descriptor: fields.HashDescriptor{
+			Type:   1,
+			Length: length,
+		},
+		Blob: data,
+	}
+	sQual := fields.QualifiedSignature{
+		Descriptor: fields.SignatureDescriptor{
+			Type:   1,
+			Length: length,
+		},
+		Blob: data,
+	}
+	kQual := fields.QualifiedKey{
+		Descriptor: fields.KeyDescriptor{
+			Type:   1,
+			Length: length,
+		},
+		Blob: data,
+	}
+	cQual := fields.QualifiedContent{
+		Descriptor: fields.ContentDescriptor{
+			Type:   1,
+			Length: length,
+		},
+		Blob: data,
+	}
+	type testPair struct {
+		unmarshaler encoding.BinaryUnmarshaler
+		value       reflect.Value
+	}
+	for _, pair := range []testPair{
+		{
+			unmarshaler: &hQual,
+			value:       reflect.ValueOf(hQual),
+		},
+		{
+			unmarshaler: &sQual,
+			value:       reflect.ValueOf(sQual),
+		},
+		{
+			unmarshaler: &kQual,
+			value:       reflect.ValueOf(kQual),
+		},
+		{
+			unmarshaler: &cQual,
+			value:       reflect.ValueOf(cQual),
+		},
+	} {
+		hBin, err := serialize.ArborSerialize(pair.value)
+		if err != nil {
+			t.Fatalf("failed marshalling: %v", err)
+		}
+		hBin = hBin[:len(hBin)-(len(data)/2)]
+		if err := pair.unmarshaler.UnmarshalBinary(hBin); err == nil {
+			t.Fatalf("should have failed to unmarshal incomplete data")
+		} else {
+			t.Logf("received expected error: %v", err)
+		}
 	}
 }
 
