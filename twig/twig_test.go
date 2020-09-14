@@ -90,3 +90,16 @@ func TestDataMarshalNoBytes(t *testing.T) {
 		t.Fatalf("Empty data store should return an empty.")
 	}
 }
+
+func TestDataSet(t *testing.T) {
+	data := twig.New()
+	var err error
+	data, err = data.Set("foo", 1, []byte("bar"))
+	if err != nil {
+		t.Fatalf("failed to set legal key value pair")
+	}
+	data, err = data.Set("baz", 1, []byte{1, 2, 3, 4, 0, 5})
+	if err == nil {
+		t.Fatalf("successfully set illegal key value pair containing null byte")
+	}
+}

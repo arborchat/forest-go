@@ -82,6 +82,11 @@ func New() *Data {
 
 // Set sets a twig key-version data entry. If the entry does not exist, it is created
 func (d *Data) Set(name string, version uint, value []byte) (*Data, error) {
+	for i, b := range value {
+		if b == 0 {
+			return nil, fmt.Errorf("invalid null byte in twig value at index %d", i)
+		}
+	}
 	d.Values[Key{Name: name, Version: version}] = value
 	return d, nil
 }
