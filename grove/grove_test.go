@@ -560,6 +560,10 @@ func (e errNode) TwigMetadata() (*twig.Data, error) {
 	return twig.New(), nil
 }
 
+func (e errNode) CreatedAt() time.Time {
+	return time.Now()
+}
+
 func (e errNode) ValidateDeep(forest.Store) error {
 	return e.error
 }

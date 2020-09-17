@@ -4,6 +4,7 @@ import (
 	"encoding"
 	"fmt"
 	"reflect"
+	"time"
 
 	"git.sr.ht/~whereswaldon/forest-go/fields"
 	"git.sr.ht/~whereswaldon/forest-go/serialize"
@@ -17,14 +18,15 @@ type Validator interface {
 }
 
 type Node interface {
+	AuthorID() *fields.QualifiedHash
+	CreatedAt() time.Time
+	Equals(interface{}) bool
 	ID() *fields.QualifiedHash
 	ParentID() *fields.QualifiedHash
-	Equals(interface{}) bool
 	TreeDepth() fields.TreeDepth
-	ValidateShallow() error
-	ValidateDeep(Store) error
-	AuthorID() *fields.QualifiedHash
 	TwigMetadata() (*twig.Data, error)
+	ValidateDeep(Store) error
+	ValidateShallow() error
 	encoding.BinaryMarshaler
 	encoding.BinaryUnmarshaler
 }
@@ -90,6 +92,10 @@ func (n CommonNode) ID() *fields.QualifiedHash {
 		Descriptor: n.IDDesc,
 		Blob:       n.id,
 	}
+}
+
+func (n CommonNode) CreatedAt() time.Time {
+	return n.Created.Time()
 }
 
 func (n CommonNode) ParentID() *fields.QualifiedHash {
