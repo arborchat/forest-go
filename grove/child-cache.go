@@ -41,3 +41,30 @@ func (c *ChildCache) Get(parent *fields.QualifiedHash) ([]*fields.QualifiedHash,
 	}
 	return out, true
 }
+
+// RemoveChild removes the provided child node from the
+// list of children for the provided parent node.
+func (c *ChildCache) RemoveChild(parent, child *fields.QualifiedHash) error {
+	submap, inMap := c.Elements[parent.String()]
+	if !inMap {
+		return nil
+	}
+	childString := child.String()
+	_, contained := submap[childString]
+	if !contained {
+		return nil
+	}
+	delete(submap, childString)
+	return nil
+}
+
+// RemoveParent destroys the top-level cache entry
+// for the given node.
+func (c *ChildCache) RemoveParent(id *fields.QualifiedHash) {
+	idString := id.String()
+	_, inMap := c.Elements[idString]
+	if !inMap {
+		return
+	}
+	delete(c.Elements, idString)
+}

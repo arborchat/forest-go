@@ -78,3 +78,38 @@ func TestChildCacheAddNoChildren(t *testing.T) {
 		t.Fatalf("parent with no children should return len 0, got %d", len(children))
 	}
 }
+
+func TestChildCacheRemoveParent(t *testing.T) {
+	parent := testutil.RandomQualifiedHash()
+	child := testutil.RandomQualifiedHash()
+	child2 := testutil.RandomQualifiedHash()
+	cache := grove.NewChildCache()
+	cache.Add(parent, child, child2)
+	cache.RemoveParent(parent)
+	children, hit := cache.Get(parent)
+	if hit {
+		t.Fatalf("should not have generated a hit for parent after parent removal")
+	}
+	if len(children) > 0 {
+		t.Fatalf("parent should have no children after being removed, got %d", len(children))
+	}
+}
+
+func TestChildCacheRemoveChild(t *testing.T) {
+	parent := testutil.RandomQualifiedHash()
+	child := testutil.RandomQualifiedHash()
+	child2 := testutil.RandomQualifiedHash()
+	cache := grove.NewChildCache()
+	cache.Add(parent, child, child2)
+	cache.RemoveChild(parent, child2)
+	children, hit := cache.Get(parent)
+	if !hit {
+		t.Fatalf("should not have removed parent from cache when removing child")
+	}
+	if len(children) > 1 {
+		t.Fatalf("parent should only have 1 child after removal, got %d", len(children))
+	}
+	if !children[0].Equals(child) {
+		t.Fatalf("remaining child should be %s, got %s", child, children[0])
+	}
+}
