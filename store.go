@@ -16,4 +16,6 @@ type Store interface {
 	// Add inserts a node into the store. It is *not* an error to insert a node which is already
 	// stored. Implementations must not return an error in this case.
 	Add(Node) error
+
+	RemoveSubtree(*fields.QualifiedHash) error
 }

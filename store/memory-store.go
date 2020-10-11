@@ -88,6 +88,37 @@ func (m *MemoryStore) AddID(id string, node forest.Node) error {
 	return nil
 }
 
+func (m *MemoryStore) RemoveSubtree(id *fields.QualifiedHash) error {
+	children, err := m.Children(id)
+	if err != nil {
+		return fmt.Errorf("failed looking up children of %s: %w", id, err)
+	}
+	for _, child := range children {
+		if err := m.RemoveSubtree(child); err != nil {
+			return fmt.Errorf("failed removing children of %s: %w", child, err)
+		}
+	}
+	child, _, err := m.Get(id)
+	if err != nil {
+		return fmt.Errorf("failed looking up child %s during removal: %w", id, err)
+	}
+	idString := id.String()
+	parentIdString := child.ParentID().String()
+	delete(m.Items, idString)
+	siblings := m.ChildMap[parentIdString]
+	for i := range siblings {
+		if siblings[i] != idString {
+			continue
+		}
+		for k := i + 1; k < len(siblings); k++ {
+			siblings[i] = siblings[k]
+		}
+		m.ChildMap[parentIdString] = siblings[:len(siblings)-1]
+		break
+	}
+	return nil
+}
+
 // Recent returns a slice of len `quantity` (or fewer) nodes of the given type.
 // These nodes are the most recent (by creation time) nodes of that type known
 // to the store.

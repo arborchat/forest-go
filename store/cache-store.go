@@ -109,3 +109,13 @@ func (m *CacheStore) Children(id *fields.QualifiedHash) ([]*fields.QualifiedHash
 func (m *CacheStore) Recent(nodeType fields.NodeType, quantity int) ([]forest.Node, error) {
 	return m.Back.Recent(nodeType, quantity)
 }
+
+func (m *CacheStore) RemoveSubtree(id *fields.QualifiedHash) error {
+	if err := m.Back.RemoveSubtree(id); err != nil {
+		return fmt.Errorf("cachestore failed removing from backing store: %w", err)
+	}
+	if err := m.Cache.RemoveSubtree(id); err != nil {
+		return fmt.Errorf("cachestore failed removing from cache: %w", err)
+	}
+	return nil
+}

@@ -245,19 +245,13 @@ func (a *Archive) AncestryOf(id *fields.QualifiedHash) ([]*fields.QualifiedHash,
 // in which the descendants are returned is undefined.
 func (a *Archive) DescendantsOf(id *fields.QualifiedHash) ([]*fields.QualifiedHash, error) {
 	descendants := make([]*fields.QualifiedHash, 0)
-	directChildren := []*fields.QualifiedHash{id}
 
-	for len(directChildren) > 0 {
-		target := directChildren[0]
-		directChildren = directChildren[1:]
-		children, err := a.Children(target)
-		if err != nil {
-			return nil, fmt.Errorf("failed looking up children of %s: %w", target, err)
-		}
-		for _, childID := range children {
-			descendants = append(descendants, childID)
-			directChildren = append(directChildren, childID)
-		}
+	err := Walk(a, id, func(id *fields.QualifiedHash) error {
+		descendants = append(descendants, id)
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed traversing descendants: %w", err)
 	}
 	return descendants, nil
 }
@@ -266,22 +260,27 @@ func (a *Archive) DescendantsOf(id *fields.QualifiedHash) ([]*fields.QualifiedHa
 // leaves is undefined.
 func (a *Archive) LeavesOf(id *fields.QualifiedHash) ([]*fields.QualifiedHash, error) {
 	leaves := make([]*fields.QualifiedHash, 0)
-	directChildren := []*fields.QualifiedHash{id}
 
-	for len(directChildren) > 0 {
-		target := directChildren[0]
-		directChildren = directChildren[1:]
-		children, err := a.Children(target)
+	err := Walk(a, id, func(id *fields.QualifiedHash) error {
+		children, err := a.Children(id)
 		if err != nil {
-			return nil, fmt.Errorf("failed looking up children of %s: %w", target, err)
+			return fmt.Errorf("failed looking up children of %s: %w", id, err)
 		}
 		if len(children) == 0 {
-			leaves = append(leaves, target)
-			continue
+			leaves = append(leaves, id)
 		}
-		for _, childID := range children {
-			directChildren = append(directChildren, childID)
-		}
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed traversing descendants: %w", err)
 	}
 	return leaves, nil
+}
+
+func (a *Archive) RemoveSubtree(id *fields.QualifiedHash) error {
+	var err error
+	a.executeAsync(func() {
+		err = a.store.RemoveSubtree(id)
+	})
+	return err
 }
