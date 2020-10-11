@@ -251,6 +251,15 @@ func (r fakeFS) OpenFile(path string, flag int, perm os.FileMode) (grove.File, e
 	return r.Open(path)
 }
 
+func (r fakeFS) Remove(path string) error {
+	_, exists := r.files[path]
+	if !exists {
+		return fmt.Errorf("file doesn't exist")
+	}
+	delete(r.files, path)
+	return nil
+}
+
 // errFS is a testing type that wraps an ordinary FS with the ability to
 // return a specific error on any function call.
 type errFS struct {
@@ -291,6 +300,13 @@ func (r errFS) OpenFile(path string, flag int, perm os.FileMode) (grove.File, er
 		return nil, r.error
 	}
 	return r.fs.OpenFile(path, flag, perm)
+}
+
+func (r errFS) Remove(path string) error {
+	if r.error != nil {
+		return r.error
+	}
+	return r.fs.Remove(path)
 }
 
 type testNodeBuilder struct {
@@ -849,5 +865,61 @@ func TestGroveRecentOpenNodeFails(t *testing.T) {
 		t.Errorf("Expected permission error when reading node file to be propagated upward, but Recent() did not error")
 	} else if len(replies) > 0 {
 		t.Errorf("Expected no recent nodes for when reading a node failed, found %d", len(replies))
+	}
+}
+
+func TestGroveRemoveSubtree(t *testing.T) {
+	fs := newFakeFS()
+	fakeNodeBuilder := NewNodeBuilder(t)
+	reply, replyFile := fakeNodeBuilder.newReplyFile("test content")
+	reply1, replyFile1 := fakeNodeBuilder.newReplyFile("test content")
+	identity := fakeNodeBuilder.Builder.User
+	identityData, err := identity.MarshalBinary()
+	idFileName, _ := identity.ID().MarshalString()
+	idFile := newFakeFile(idFileName, identityData)
+	community := fakeNodeBuilder.Community
+	communityData, err := community.MarshalBinary()
+	communityFileName, _ := community.ID().MarshalString()
+	communityFile := newFakeFile(communityFileName, communityData)
+
+	resetAll := func() {
+		replyFile.ResetBuffer()
+		replyFile1.ResetBuffer()
+		idFile.ResetBuffer()
+		communityFile.ResetBuffer()
+	}
+	g, err := grove.NewWithFS(fs)
+	if err != nil {
+		t.Errorf("Failed constructing grove: %v", err)
+	}
+
+	// add node to fs, now should be discoverable
+	fs.files[replyFile.Name()] = replyFile
+	fs.files[idFile.Name()] = idFile
+	fs.files[communityFile.Name()] = communityFile
+	fs.files[replyFile1.Name()] = replyFile1
+
+	if err := g.RemoveSubtree(reply1.ID()); err != nil {
+		t.Errorf("should not have failed to remove node: %v", err)
+	}
+	if children, err := g.Children(community.ID()); err != nil {
+		t.Errorf("Expected looking for community children to succeed: %v", err)
+	} else if len(children) > 1 {
+		t.Errorf("Expected 1 child nodes for community, found %d", len(children))
+	}
+	resetAll()
+
+	if err := g.RemoveSubtree(community.ID()); err != nil {
+		t.Errorf("should not have failed to remove node: %v", err)
+	}
+	if _, has, err := g.GetCommunity(community.ID()); err != nil {
+		t.Errorf("should not error when looking up nonexistent node: %v", err)
+	} else if has {
+		t.Errorf("should no longer have community after removing subtree rooted at it.")
+	}
+	if _, has, err := g.GetCommunity(reply.ID()); err != nil {
+		t.Errorf("should not error when looking up nonexistent node: %v", err)
+	} else if has {
+		t.Errorf("should no longer have reply after removing community above it.")
 	}
 }

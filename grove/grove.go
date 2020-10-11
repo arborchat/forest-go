@@ -38,6 +38,7 @@ type FS interface {
 	Open(path string) (File, error)
 	Create(path string) (File, error)
 	OpenFile(path string, flag int, perm os.FileMode) (File, error)
+	Remove(path string) error
 }
 
 // RelativeFS is a file system that acts relative to a specific path
@@ -68,6 +69,12 @@ func (r RelativeFS) Create(path string) (File, error) {
 // of the RelativeFS
 func (r RelativeFS) OpenFile(path string, flag int, perm os.FileMode) (File, error) {
 	return os.OpenFile(r.resolve(path), flag, perm)
+}
+
+// Remove removes the given path relative to the root
+// of the RelativeFS.
+func (r RelativeFS) Remove(path string) error {
+	return os.Remove(r.resolve(path))
 }
 
 // Grove is an on-disk store for arbor forest nodes. It maintains internal
@@ -414,4 +421,31 @@ func (g *Grove) GetReply(communityID, conversationID, replyID *fields.QualifiedH
 // implementable, and should be done as soon as is feasible.
 func (g *Grove) CopyInto(other forest.Store) error {
 	return fmt.Errorf("method CopyInto() is not currently implemented on Grove")
+}
+
+// RemoveSubtree removes the subtree rooted at the node
+// with the provided ID from the grove.
+func (g *Grove) RemoveSubtree(id *fields.QualifiedHash) error {
+	children, err := g.Children(id)
+	if err != nil {
+		return fmt.Errorf("failed looking up children of %s: %w", id, err)
+	}
+	for _, child := range children {
+		if err := g.RemoveSubtree(child); err != nil {
+			return fmt.Errorf("failed removing children of %s: %w", child, err)
+		}
+	}
+	child, _, err := g.Get(id)
+	if err != nil {
+		return fmt.Errorf("failed looking up child %s during removal: %w", id, err)
+	}
+	g.ChildCache.RemoveChild(child.ParentID(), id)
+	g.ChildCache.RemoveParent(id)
+	if err := g.NodeCache.RemoveSubtree(id); err != nil {
+		return fmt.Errorf("failed removing node %s from internal cache: %w", id, err)
+	}
+	if err := g.Remove(id.String()); err != nil {
+		return fmt.Errorf("failed removing node %s from filesystem: %w", id, err)
+	}
+	return nil
 }
