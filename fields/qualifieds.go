@@ -310,8 +310,6 @@ func (q *QualifiedSignature) Validate() error {
 		switch concrete := p.(type) {
 		case *packet.Signature:
 			algorithm = concrete.PubKeyAlgo
-		case *packet.SignatureV3:
-			algorithm = concrete.PubKeyAlgo
 		default:
 			return fmt.Errorf("signature packet did not contain signature, had %T instead", concrete)
 		}
